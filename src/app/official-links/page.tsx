@@ -34,7 +34,7 @@ export default function OfficialLinksPage() {
             className="flex items-center justify-between rounded-xl border border-line bg-white p-4 shadow-soft transition-colors hover:border-brand-300 hover:bg-surface-soft"
           >
             <span className="font-semibold text-navy">{c.label}</span>
-            <ExternalLink className="h-4 w-4 text-brand-600" />
+            <ExternalLink  className="h-4 w-4 text-brand-600" aria-hidden="true" />
           </a>
         ))}
       </div>

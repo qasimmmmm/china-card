@@ -1,21 +1,23 @@
 #!/usr/bin/env node
 /**
- * China Arrival Card — operator automation worker.
+ * China Arrival Card — automation worker.
  *
- * Pulls submitted orders from your app, then (in browser mode) opens the
- * official NIA Arrival Card portal and pre-fills the traveler's details so a
- * human operator can verify, complete any CAPTCHA, and submit. The worker
- * deliberately stops before final submission — a person is always in the loop.
+ * Pulls submitted orders from your app and fills the official Arrival Card form.
+ * By default it runs FULLY AUTOMATICALLY against the bundled mock portal:
+ * fill → submit → capture the confirmation number → mark the order completed and
+ * push the confirmation back to your app (which surfaces it on the tracking page).
  *
- * Usage:
- *   node index.js --list          # show the queue and exit (no browser)
- *   node index.js --dry-run       # show the field mapping per order (no browser)
- *   node index.js                 # process the queue in a headed browser
- *   node index.js --once CAC-XXXX # process a single order
+ * Modes:
+ *   node index.js --watch     # default (npm start): loop forever, auto-process new orders
+ *   node index.js --auto      # process the current queue once, fully automatically
+ *   node index.js --review    # headed, human verifies & submits each order
+ *   node index.js --list      # show the queue and exit
+ *   node index.js --dry-run   # show the field mapping per order (no browser)
+ *   node index.js --once CAC-XXXX   # process a single order
  *
- * Compliance: this tool re-keys data the traveler already provided, exactly as
- * the traveler would themselves. It does not bypass anti-bot measures. You are
- * responsible for operating it lawfully and for the accuracy of each submission.
+ * Portal: WORKER_PORTAL_MODE=mock (default, runnable demo) | official (real NIA).
+ * Compliance: this re-keys data the traveler already provided. It never bypasses
+ * CAPTCHAs. For the real government site, keep a human in the loop (--review).
  */
 import readline from 'node:readline'
 import { config } from './config.js'
@@ -24,121 +26,157 @@ import { mapApplication, summarize } from './mapping.js'
 
 const args = process.argv.slice(2)
 const has = (f) => args.includes(f)
-const valueOf = (f) => {
-  const i = args.indexOf(f)
-  return i >= 0 ? args[i + 1] : undefined
-}
+const valueOf = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : undefined }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-function ask(question) {
+function ask(q) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-  return new Promise((resolve) => rl.question(question, (a) => { rl.close(); resolve(a.trim()) }))
+  return new Promise((res) => rl.question(q, (a) => { rl.close(); res(a.trim()) }))
 }
 
 async function getOrders() {
   const once = valueOf('--once')
-  if (once) {
-    const order = await getOrder(once)
-    return order ? [order] : []
-  }
+  if (once) { const o = await getOrder(once); return o ? [o] : [] }
   return pullQueue()
 }
 
-async function main() {
-  console.log(`\n🛂  China Arrival Card worker`)
+function banner() {
+  console.log(`\n🛂  China Arrival Card automation worker`)
   console.log(`   API:    ${config.apiBase}`)
-  console.log(`   Portal: ${config.portalUrl}\n`)
-
-  let orders
-  try {
-    orders = await getOrders()
-  } catch (err) {
-    console.error(`✖ Could not reach the operator API: ${err.message}`)
-    console.error(`  Is the app running, and is OPERATOR_API_KEY correct?`)
-    process.exit(1)
-  }
-
-  if (!orders.length) {
-    console.log('✓ No orders in the queue. Nothing to do.')
-    return
-  }
-
-  console.log(`Found ${orders.length} order(s) in status "${config.pullStatus}":\n`)
-  for (const o of orders) console.log(summarize(o) + '\n' + '─'.repeat(48))
-
-  if (has('--list')) return
-
-  if (has('--dry-run')) {
-    for (const o of orders) {
-      console.log(`\n▶ ${o.reference} — field mapping:`)
-      for (const f of mapApplication(o)) {
-        console.log(`   ${f.label.padEnd(28)} = ${f.value}`)
-      }
-    }
-    console.log('\n(dry run — no browser launched)')
-    return
-  }
-
-  // ── Browser mode ──────────────────────────────────────────
-  let chromium
-  try {
-    ;({ chromium } = await import('playwright'))
-  } catch {
-    console.error('✖ Playwright is not installed. Run:  npm install && npm run install-browser')
-    process.exit(1)
-  }
-
-  const browser = await chromium.launch({ headless: config.headless })
-  const context = await browser.newContext({ locale: 'en-US' })
-
-  for (const order of orders) {
-    console.log(`\n══════════════════════════════════════════════`)
-    console.log(`Processing ${order.reference}`)
-    console.log(summarize(order))
-
-    const page = await context.newPage()
-    try {
-      await page.goto(config.portalUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
-    } catch (err) {
-      console.error(`  ⚠ Could not open portal: ${err.message}`)
-    }
-
-    console.log('\n  The portal is open. If there is an intro/consent screen, click through to the form,')
-    await ask('  then press Enter here to auto-fill the traveler details… ')
-
-    const { fillAll } = await import('./fill.js')
-    const results = await fillAll(page, mapApplication(order))
-    const ok = results.filter((r) => r.ok).map((r) => r.key)
-    const missed = results.filter((r) => !r.ok)
-    console.log(`  ✓ Filled ${ok.length} field(s): ${ok.join(', ') || '—'}`)
-    if (missed.length) {
-      console.log(`  ⚠ Please complete by hand: ${missed.map((m) => m.key).join(', ')}`)
-    }
-
-    console.log('\n  ▸ REVIEW every field, complete anything missing, solve any CAPTCHA, and SUBMIT manually.')
-    const outcome = await ask('  After submitting, type: done / action / skip … ')
-
-    try {
-      if (outcome === 'done') {
-        await setStatus(order.reference, 'completed', 'Submitted to the NIA portal and confirmed by operator.')
-        console.log('  ✓ Marked completed.')
-      } else if (outcome === 'action') {
-        await setStatus(order.reference, 'action_required', 'Operator needs more info from the traveler.')
-        console.log('  ✓ Marked action required.')
-      } else {
-        console.log('  ↷ Skipped — status unchanged.')
-      }
-    } catch (err) {
-      console.error(`  ✖ Status update failed: ${err.message}`)
-    }
-
-    await page.close().catch(() => {})
-  }
-
-  await browser.close()
-  console.log('\n✓ Queue processed.')
+  console.log(`   Portal: ${config.portalMode.toUpperCase()} → ${config.portalUrl}`)
+  console.log(`   Mode:   ${has('--review') ? 'review (human-in-the-loop)' : 'AUTOMATIC' + (config.autoSubmit ? ' (auto-submit)' : ' (fill only)')}\n`)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+/** Fully automatic processing of one order against the portal. */
+async function autoProcess(context, order) {
+  console.log(`\n▶ ${order.reference}  (${order.contact?.name || ''})`)
+  await setStatus(order.reference, 'processing', `Bot opened the ${config.portalMode} portal and is filling the Arrival Card.`).catch(() => {})
+
+  const page = await context.newPage()
+  const { fillAll, tickDeclaration, submitAndConfirm } = await import('./fill.js')
+  try {
+    await page.goto(config.portalUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    const results = await fillAll(page, mapApplication(order))
+    const filled = results.filter((r) => r.ok).length
+    const missed = results.filter((r) => !r.ok)
+    await tickDeclaration(page)
+    console.log(`   filled ${filled}/${results.length} fields${missed.length ? ` (missed: ${missed.map((m) => m.key).join(', ')})` : ''}`)
+
+    const shotDir = process.env.WORKER_SHOT_DIR
+    if (shotDir) await page.screenshot({ path: `${shotDir}/${order.reference}-filled.png`, fullPage: true }).catch(() => {})
+
+    if (!config.autoSubmit) {
+      await setStatus(order.reference, 'action_required', `Auto-filled ${filled} fields; awaiting operator review & submit.`)
+      console.log(`   ⏸ filled only (auto-submit off) → action_required`)
+      return
+    }
+
+    const conf = await submitAndConfirm(page, { submitHints: config.submitHints, confirmationSelector: config.confirmationSelector })
+    if (conf.ok) {
+      if (shotDir) await page.screenshot({ path: `${shotDir}/${order.reference}-confirmed.png`, fullPage: true }).catch(() => {})
+      await setStatus(order.reference, 'completed', `Submitted to the ${config.portalMode} portal. Confirmation ${conf.code}.`, {
+        reference: conf.code,
+        portal: config.portalMode,
+      })
+      console.log(`   ✓ submitted — confirmation ${conf.code} → completed`)
+    } else {
+      await setStatus(order.reference, 'action_required', `Auto-fill done but submission needs a human: ${conf.reason}.`)
+      console.log(`   ⚠ ${conf.reason} → action_required`)
+    }
+  } catch (err) {
+    await setStatus(order.reference, 'action_required', `Automation error: ${String(err.message).slice(0, 120)}`).catch(() => {})
+    console.log(`   ✖ error: ${err.message}`)
+  } finally {
+    await page.close().catch(() => {})
+  }
+}
+
+async function runAutoPass(launchOpts) {
+  const { chromium } = await loadPlaywright()
+  const browser = await chromium.launch(launchOpts)
+  const context = await browser.newContext({ locale: 'en-US' })
+  try {
+    const orders = await getOrders()
+    if (!orders.length) { console.log('✓ Queue empty.'); return 0 }
+    console.log(`Processing ${orders.length} order(s) automatically…`)
+    for (const o of orders) await autoProcess(context, o)
+    return orders.length
+  } finally {
+    await browser.close()
+  }
+}
+
+async function loadPlaywright() {
+  try { return await import('playwright') } catch {
+    console.error('✖ Playwright not installed. Run:  npm install && npm run install-browser')
+    process.exit(1)
+  }
+}
+
+async function main() {
+  banner()
+
+  if (has('--list') || has('--dry-run')) {
+    const orders = await getOrders().catch((e) => { console.error(`✖ API: ${e.message}`); process.exit(1) })
+    if (!orders.length) { console.log('✓ No orders in the queue.'); return }
+    for (const o of orders) console.log(summarize(o) + '\n' + '─'.repeat(48))
+    if (has('--dry-run')) {
+      for (const o of orders) {
+        console.log(`\n▶ ${o.reference} — field mapping:`)
+        for (const f of mapApplication(o)) console.log(`   ${f.label.padEnd(28)} = ${f.value}`)
+      }
+    }
+    return
+  }
+
+  if (has('--review')) return reviewMode()
+
+  // Watch (default) or single auto pass.
+  const launchOpts = { headless: config.headless }
+  if (config.browserChannel) launchOpts.channel = config.browserChannel
+  if (has('--auto') && !has('--watch')) {
+    await runAutoPass(launchOpts)
+    return
+  }
+
+  // --watch (default): loop forever, picking up new submitted orders automatically.
+  console.log(`👀 Watch mode — polling every ${config.pollMs / 1000}s. Submit an order on the site and watch it get filed automatically. Ctrl+C to stop.`)
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    try {
+      const n = await runAutoPass(launchOpts)
+      if (n === 0) process.stdout.write('.')
+    } catch (err) {
+      console.error(`\n⚠ pass error: ${err.message}`)
+    }
+    await sleep(config.pollMs)
+  }
+}
+
+/** Human-in-the-loop mode (headed): bot fills, operator reviews & submits. */
+async function reviewMode() {
+  const { chromium } = await loadPlaywright()
+  const orders = await getOrders()
+  if (!orders.length) { console.log('✓ No orders in the queue.'); return }
+  const reviewOpts = { headless: false }
+  if (config.browserChannel) reviewOpts.channel = config.browserChannel
+  const browser = await chromium.launch(reviewOpts)
+  const context = await browser.newContext({ locale: 'en-US' })
+  const { fillAll, tickDeclaration } = await import('./fill.js')
+  for (const order of orders) {
+    console.log(`\n${'═'.repeat(46)}\n${summarize(order)}`)
+    const page = await context.newPage()
+    await page.goto(config.portalUrl, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {})
+    await ask('  Click through any intro screen, then press Enter to auto-fill… ')
+    const results = await fillAll(page, mapApplication(order))
+    await tickDeclaration(page)
+    console.log(`  ✓ filled ${results.filter((r) => r.ok).length}/${results.length}. Review, solve any CAPTCHA, and submit manually.`)
+    const outcome = await ask('  After submitting type: done / action / skip … ')
+    if (outcome === 'done') await setStatus(order.reference, 'completed', 'Submitted by operator.')
+    else if (outcome === 'action') await setStatus(order.reference, 'action_required', 'Operator needs more info.')
+    await page.close().catch(() => {})
+  }
+  await browser.close()
+}
+
+main().catch((err) => { console.error(err); process.exit(1) })

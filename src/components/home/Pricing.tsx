@@ -34,7 +34,7 @@ export function Pricing() {
               )}
 
               <span className="pill w-fit bg-brand-50 text-brand-700">
-                <Clock className="h-3.5 w-3.5" />
+                <Clock  className="h-3.5 w-3.5" aria-hidden="true" />
                 {tier.badge}
               </span>
 
@@ -50,7 +50,7 @@ export function Pricing() {
               <ul className="mt-6 flex-1 space-y-3">
                 {tier.features.map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-sm text-ink">
-                    <Check className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" />
+                    <Check  className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" aria-hidden="true" />
                     {f}
                   </li>
                 ))}
@@ -68,7 +68,7 @@ export function Pricing() {
         </div>
 
         <p className="mx-auto mt-8 flex max-w-3xl items-start gap-2 rounded-xl border border-line bg-white p-4 text-sm text-ink-soft">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+          <Info  className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
           {disclaimer.pricing}
         </p>
       </div>

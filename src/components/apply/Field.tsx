@@ -76,7 +76,7 @@ export function Field({ field }: { field: FieldDef }) {
                     : 'border-line bg-white text-ink-soft hover:border-brand-300 hover:bg-surface-soft',
                 )}
               >
-                {active && <Check className="mr-1.5 -ml-0.5 inline h-4 w-4" />}
+                {active && <Check  className="mr-1.5 -ml-0.5 inline h-4 w-4" aria-hidden="true" />}
                 {opt}
               </button>
             )
@@ -126,7 +126,7 @@ export function Field({ field }: { field: FieldDef }) {
                     active ? 'border-brand-600 bg-brand-600 text-white' : 'border-ink-muted/50',
                   )}
                 >
-                  {active && <Check className="h-3 w-3" />}
+                  {active && <Check  className="h-3 w-3" aria-hidden="true" />}
                 </span>
                 {opt}
               </button>
@@ -161,7 +161,7 @@ export function Field({ field }: { field: FieldDef }) {
             htmlFor={field.id}
             className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-line bg-surface-soft px-4 py-6 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/40"
           >
-            <Upload className="h-6 w-6 text-brand-600" />
+            <Upload  className="h-6 w-6 text-brand-600" aria-hidden="true" />
             <span className="mt-2 text-sm font-semibold text-navy">Click to upload your passport page</span>
             <span className="mt-0.5 text-xs text-ink-muted">JPG, PNG or PDF · up to {MAX_FILE_MB} MB</span>
             <input id={field.id} type="file" accept="image/*,application/pdf" className="sr-only" onChange={onChange} />
@@ -169,7 +169,7 @@ export function Field({ field }: { field: FieldDef }) {
         ) : (
           <div className="flex items-center justify-between rounded-xl border border-line bg-white px-4 py-3">
             <span className="flex items-center gap-2 text-sm text-ink">
-              <FileText className="h-4.5 w-4.5 text-brand-600" />
+              <FileText  className="h-4.5 w-4.5 text-brand-600" aria-hidden="true" />
               {display}
             </span>
             <button
@@ -181,7 +181,7 @@ export function Field({ field }: { field: FieldDef }) {
               className="text-ink-muted hover:text-accent"
               aria-label="Remove file"
             >
-              <X className="h-4 w-4" />
+              <X  className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         )}

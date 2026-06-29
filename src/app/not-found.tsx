@@ -12,13 +12,13 @@ export default function NotFound() {
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/" className="btn-primary btn-md">
-            <Home className="h-4 w-4" /> Go home
+            <Home  className="h-4 w-4" aria-hidden="true" /> Go home
           </Link>
           <Link href="/apply" className="btn btn-outline btn-md">
-            <FileText className="h-4 w-4" /> Start application
+            <FileText  className="h-4 w-4" aria-hidden="true" /> Start application
           </Link>
           <Link href="/track" className="btn btn-ghost btn-md">
-            <Search className="h-4 w-4" /> Track an order
+            <Search  className="h-4 w-4" aria-hidden="true" /> Track an order
           </Link>
         </div>
       </div>

@@ -17,7 +17,7 @@ export function Footer() {
           ].map((f) => (
             <div key={f.title} className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
-                <f.icon className="h-5 w-5 text-gold" />
+                <f.icon className="h-5 w-5 text-gold" aria-hidden="true" />
               </span>
               <div>
                 <p className="font-semibold text-white">{f.title}</p>
@@ -36,7 +36,7 @@ export function Footer() {
             href={`mailto:${site.supportEmail}`}
             className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-white hover:text-gold"
           >
-            <Mail className="h-4 w-4" />
+            <Mail  className="h-4 w-4" aria-hidden="true" />
             {site.supportEmail}
           </a>
         </div>

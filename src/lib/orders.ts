@@ -48,6 +48,7 @@ export function publicOrderView(order: Order) {
     contactName: order.contact.name,
     arrivalDate: order.application.arrivalDate ?? null,
     entryPort: order.application.entryPort ?? null,
+    official: order.official ?? null,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
     events: order.events,

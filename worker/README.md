@@ -1,24 +1,24 @@
-# Operator automation worker
+# Automation worker — fills the official Arrival Card automatically
 
-This is a **separate, operator-run tool** — it is *not* part of the website and is
-never deployed to Vercel. It helps your processing team re-key a customer's
-already-submitted details into the **official NIA China Arrival Card portal**,
-with a **human always in the loop**.
+A standalone tool that turns each submitted order on your website into a filed
+Arrival Card on the official portal — **fully automatically** by default. It runs
+wherever you want (a small VM/container), not on Vercel.
 
-## What it does
+```
+Customer fills YOUR form  →  order queued  →  worker pulls it  →  opens the portal,
+fills every field, submits, reads the confirmation number  →  marks the order
+"completed" and pushes the confirmation back (shown on your /track page).
+```
 
-1. Pulls orders from your app's operator API (`/api/operator/queue`).
-2. Opens the official portal in a real browser.
-3. Pre-fills the traveler's details (best-effort, by field label).
-4. **Stops.** The operator reviews every field, completes anything missing,
-   solves any CAPTCHA, and clicks submit.
-5. Updates the order status back in your app.
+## Two portals, one code path
 
-## What it deliberately does **not** do
+| `WORKER_PORTAL_MODE` | Target | Use |
+|---|---|---|
+| `mock` (default) | a bundled, realistic stand-in form (`mock-portal/index.html`) | a complete, runnable, testable demo — works out of the box |
+| `official` | the real NIA portal (`OFFICIAL_PORTAL_URL`) | production, after you refine selectors against the live form |
 
-- It does **not** bypass or solve CAPTCHAs or any anti-bot protection.
-- It does **not** auto-submit — a person always verifies and submits.
-- It does **not** invent data — it only enters what the traveler provided.
+The mock portal is clearly labelled "DEMO / MOCK" so it can never be mistaken for the
+real government site. The exact same fill/submit code drives both.
 
 ## Setup
 
@@ -28,35 +28,45 @@ npm install
 npm run install-browser   # downloads Chromium for Playwright
 ```
 
-Set environment variables (must match your server):
+Environment (must match your app's server):
 
 ```bash
-export WORKER_API_BASE="http://localhost:3000"      # or your Vercel URL
-export OPERATOR_API_KEY="dev-operator-key"           # match the server
-export OFFICIAL_PORTAL_URL="https://s.nia.gov.cn/ArrivalCardFillingPC/"
-export WORKER_HEADLESS="false"                        # headed so you can review
+export WORKER_API_BASE="http://localhost:3000"     # or your deployed URL
+export OPERATOR_API_KEY="dev-operator-key"          # match the server's key
+export WORKER_PORTAL_MODE="mock"                    # mock (demo) | official
+export OFFICIAL_PORTAL_URL="https://s.nia.gov.cn/ArrivalCardFillingPC/"  # for official mode
+export WORKER_AUTO_SUBMIT="true"                    # auto-submit (true) or fill-only (false)
+export WORKER_HEADLESS="true"                       # true unattended, false to watch
 ```
 
-## Usage
+## Run it
 
 ```bash
+npm start          # WATCH: loop forever, auto-process new orders as they arrive (fully automatic)
+npm run auto       # process the current queue once, fully automatically
+npm run review     # headed: bot fills, a human verifies & submits each order
 npm run queue      # list the queue (no browser)
 npm run dry-run    # show the field mapping per order (no browser)
-npm start          # process the queue in a headed browser
-node index.js --once CAC-7F3K-9Q2D   # process one order
+node index.js --once CAC-7F3K-9Q2D   # process a single order
 ```
 
-## Tuning the field mapping
+The end-to-end demo: start your app, run `npm start` here, submit an application on
+the website, and watch the order get filed on the mock portal within seconds — its
+confirmation number then appears on the site's tracking page.
 
-The portal is a localized single-page app without published selectors, so
-`mapping.js` locates fields by **label hints**. After inspecting the live portal,
-refine the `hints` (or add precise selectors) in `mapping.js` and `fill.js` to
-make filling exact. Until then, the worker fills what it can and clearly tells the
-operator which fields to complete by hand.
+## What it will and won't do
 
-## Compliance
+- ✅ Re-keys exactly the data the traveler already provided.
+- ✅ Reads back the official confirmation number and syncs it to your app.
+- ❌ Never solves CAPTCHAs or defeats bot-detection. If the **real** portal blocks an
+  automated submit, the worker stops cleanly and flags the order `action_required` so a
+  human can finish it (`npm run review`).
 
-You are responsible for operating this tool lawfully, for having the traveler's
-authorization to act on their behalf, and for the accuracy of every submission.
-The official Arrival Card is free directly from the NIA; this service charges only
-for optional assistance.
+## Going to production (official mode)
+
+The NIA portal is a localized SPA without published selectors. `mapping.js` locates
+fields by **label hints**; refine those hints (or add precise selectors) against the
+live form, set `WORKER_PORTAL_MODE=official`, and decide your `WORKER_AUTO_SUBMIT`
+policy. For a government site, keeping a human in the loop (`npm run review`) is the
+safest, most compliant choice. You are responsible for operating this lawfully, with
+the traveler's authorization, and for the accuracy of every submission.

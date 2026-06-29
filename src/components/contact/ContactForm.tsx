@@ -45,7 +45,7 @@ export function ContactForm() {
     return (
       <div className="card p-8 text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-light">
-          <CheckCircle2 className="h-8 w-8 text-success" />
+          <CheckCircle2  className="h-8 w-8 text-success" aria-hidden="true" />
         </div>
         <h3 className="mt-4 text-xl font-bold text-navy">Message sent</h3>
         <p className="mt-2 text-ink-soft">{message}</p>
@@ -86,13 +86,13 @@ export function ContactForm() {
 
       {status === 'error' && message && (
         <div className="flex items-start gap-2 rounded-xl border border-accent/30 bg-accent/5 p-3 text-sm text-accent-dark">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <AlertCircle  className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           {message}
         </div>
       )}
 
       <button type="submit" disabled={status === 'sending'} className="btn-primary btn-lg w-full sm:w-auto">
-        {status === 'sending' ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-4 w-4" />}
+        {status === 'sending' ? <Loader2  className="h-5 w-5 animate-spin" aria-hidden="true" /> : <Send  className="h-4 w-4" aria-hidden="true" />}
         Send message
       </button>
     </form>

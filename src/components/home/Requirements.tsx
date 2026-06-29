@@ -17,7 +17,7 @@ export function Requirements() {
           <div className="mt-7">
             <Link href="/apply" className="btn-primary btn-md">
               Begin application
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight  className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
         </Reveal>
@@ -26,7 +26,7 @@ export function Requirements() {
           <ul className="grid gap-3 sm:grid-cols-1">
             {requirements.map((r) => (
               <li key={r} className="flex items-start gap-3 rounded-xl border border-line bg-white p-4 shadow-soft">
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+                <CheckCircle2  className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
                 <span className="text-[0.95rem] text-ink">{r}</span>
               </li>
             ))}

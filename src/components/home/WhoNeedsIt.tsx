@@ -27,14 +27,14 @@ export function WhoNeedsIt() {
             <div className="card h-full p-6 sm:p-8">
               <h3 className="flex items-center gap-2 text-xl font-bold text-navy">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-success-light text-success-dark">
-                  <Check className="h-5 w-5" />
+                  <Check  className="h-5 w-5" aria-hidden="true" />
                 </span>
                 You need an Arrival Card if…
               </h3>
               <ul className="mt-5 space-y-3">
                 {need.map((n) => (
                   <li key={n} className="flex items-start gap-3 text-[0.95rem] text-ink">
-                    <Check className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" />
+                    <Check  className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" aria-hidden="true" />
                     {n}
                   </li>
                 ))}
@@ -46,7 +46,7 @@ export function WhoNeedsIt() {
             <div className="card h-full p-6 sm:p-8">
               <h3 className="flex items-center gap-2 text-xl font-bold text-navy">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-tint text-brand-700">
-                  <X className="h-5 w-5" />
+                  <X  className="h-5 w-5" aria-hidden="true" />
                 </span>
                 You may be exempt if…
               </h3>
@@ -64,7 +64,7 @@ export function WhoNeedsIt() {
 
         <div className="mt-6 flex flex-col items-start gap-3 rounded-2xl bg-brand-600 p-5 text-white sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <p className="flex items-start gap-3 text-sm sm:text-[0.95rem]">
-            <Plane className="mt-0.5 h-5 w-5 shrink-0 text-white/80" />
+            <Plane  className="mt-0.5 h-5 w-5 shrink-0 text-white/80" aria-hidden="true" />
             <span>
               <span className="font-semibold">Transiting through China?</span> The 240-hour visa-free
               transit still requires an Arrival Card. We’ll help confirm your itinerary qualifies.
@@ -76,7 +76,7 @@ export function WhoNeedsIt() {
         </div>
 
         <p className="mx-auto mt-6 flex max-w-3xl items-start justify-center gap-2 text-center text-xs text-ink-muted">
-          <Info className="mt-0.5 h-4 w-4 shrink-0" />
+          <Info  className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           Eligibility rules are set by China’s authorities and can change. Always verify your specific
           situation; we’ll flag anything that looks off during review.
         </p>

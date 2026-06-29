@@ -22,12 +22,12 @@ export async function getOrder(reference) {
   return json.order
 }
 
-export async function setStatus(reference, status, note) {
+export async function setStatus(reference, status, note, confirmation) {
   const url = `${config.apiBase}/api/operator/orders/${encodeURIComponent(reference)}`
   const res = await fetch(url, {
     method: 'PATCH',
     headers: headers(),
-    body: JSON.stringify({ status, note }),
+    body: JSON.stringify({ status, note, confirmation }),
   })
   if (!res.ok) throw new Error(`Status update failed (${res.status}): ${await res.text()}`)
   return (await res.json()).order

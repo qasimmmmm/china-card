@@ -34,13 +34,13 @@ export default async function ApplyPage({
           </p>
           <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-ink-soft">
             <span className="flex items-center gap-2">
-              <Lock className="h-4 w-4 text-success" /> 256-bit SSL encrypted
+              <Lock  className="h-4 w-4 text-success" aria-hidden="true" /> 256-bit SSL encrypted
             </span>
             <span className="flex items-center gap-2">
-              <BadgeCheck className="h-4 w-4 text-success" /> Expert human review
+              <BadgeCheck  className="h-4 w-4 text-success" aria-hidden="true" /> Expert human review
             </span>
             <span className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-success" /> Save & finish later
+              <Clock  className="h-4 w-4 text-success" aria-hidden="true" /> Save & finish later
             </span>
           </div>
         </div>

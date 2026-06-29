@@ -51,12 +51,12 @@ export default function AboutPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="card p-6 sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-bold text-navy">
-                <Check className="h-5 w-5 text-success" /> What we do
+                <Check  className="h-5 w-5 text-success" aria-hidden="true" /> What we do
               </h2>
               <ul className="mt-4 space-y-3">
                 {weDo.map((x) => (
                   <li key={x} className="flex items-start gap-3 text-[0.95rem] text-ink">
-                    <Check className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" />
+                    <Check  className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" aria-hidden="true" />
                     {x}
                   </li>
                 ))}
@@ -64,12 +64,12 @@ export default function AboutPage() {
             </div>
             <div className="card p-6 sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-bold text-navy">
-                <X className="h-5 w-5 text-accent" /> What we don’t do
+                <X  className="h-5 w-5 text-accent" aria-hidden="true" /> What we don’t do
               </h2>
               <ul className="mt-4 space-y-3">
                 {weDont.map((x) => (
                   <li key={x} className="flex items-start gap-3 text-[0.95rem] text-ink-soft">
-                    <X className="mt-0.5 h-4.5 w-4.5 shrink-0 text-accent" />
+                    <X  className="mt-0.5 h-4.5 w-4.5 shrink-0 text-accent" aria-hidden="true" />
                     {x}
                   </li>
                 ))}
@@ -85,7 +85,7 @@ export default function AboutPage() {
             ].map((v) => (
               <div key={v.title} className="card p-6">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                  <v.icon className="h-6 w-6" />
+                  <v.icon className="h-6 w-6" aria-hidden="true" />
                 </span>
                 <h3 className="mt-4 text-lg font-semibold text-navy">{v.title}</h3>
                 <p className="mt-1 text-sm text-ink-soft">{v.desc}</p>
@@ -99,7 +99,7 @@ export default function AboutPage() {
 
           <div className="text-center">
             <Link href="/apply" className="btn-primary btn-lg">
-              Start your application <ChevronRight className="h-5 w-5" />
+              Start your application <ChevronRight  className="h-5 w-5" aria-hidden="true" />
             </Link>
           </div>
         </div>

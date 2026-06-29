@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Search, Loader2, AlertCircle, CheckCircle2, Clock, FileSearch, Send, XCircle } from 'lucide-react'
 import { STATUS_LABELS, type OrderStatus } from '@/lib/types'
 import { formatUSD, cn } from '@/lib/utils'
+import { QrMock } from '@/components/ui/QrMock'
 
 interface PublicOrder {
   reference: string
@@ -13,6 +14,7 @@ interface PublicOrder {
   contactName: string
   arrivalDate: string | null
   entryPort: string | null
+  official: { reference: string; portal: string; submittedAt: string } | null
   createdAt: string
   updatedAt: string
   events: { at: string; status: OrderStatus; note?: string }[]
@@ -94,7 +96,7 @@ export function TrackClient({ initialRef = '' }: { initialRef?: string }) {
             autoComplete="off"
           />
           <button type="submit" disabled={loading} className="btn-primary btn-md shrink-0">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            {loading ? <Loader2  className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Search  className="h-4 w-4" aria-hidden="true" />}
             Track order
           </button>
         </div>
@@ -103,7 +105,7 @@ export function TrackClient({ initialRef = '' }: { initialRef?: string }) {
 
       {error && (
         <div className="mt-4 flex items-start gap-2 rounded-xl border border-accent/30 bg-accent/5 p-4 text-sm text-accent-dark">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <AlertCircle  className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           {error}
         </div>
       )}
@@ -138,6 +140,24 @@ export function TrackClient({ initialRef = '' }: { initialRef?: string }) {
             </dl>
           </div>
 
+          {order.official?.reference && (
+            <div className="m-5 mb-0 flex items-center gap-4 rounded-xl border border-success/30 bg-success-light/60 p-4 sm:m-6 sm:mb-0">
+              <div className="rounded-lg border border-success/30 bg-white p-1.5">
+                <QrMock size={64} />
+              </div>
+              <div>
+                <p className="flex items-center gap-1.5 text-sm font-bold text-success-dark">
+                  <CheckCircle2  className="h-4 w-4" aria-hidden="true" /> Arrival Card filed
+                </p>
+                <p className="mt-0.5 text-sm text-ink-soft">
+                  Official confirmation{' '}
+                  <span className="font-mono font-semibold text-navy">{order.official.reference}</span>. Present
+                  your passport and QR code at immigration.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="p-5 sm:p-6">
             <p className="text-sm font-semibold text-navy">Status timeline</p>
             <ol className="mt-4 space-y-0">
@@ -157,7 +177,7 @@ export function TrackClient({ initialRef = '' }: { initialRef?: string }) {
                             isLatest ? style.color : 'bg-line text-ink-muted',
                           )}
                         >
-                          <Icon className="h-4 w-4" />
+                          <Icon className="h-4 w-4" aria-hidden="true" />
                         </span>
                         {i < order.events.length - 1 && <span className="mt-1 w-px flex-1 bg-line" />}
                       </div>
@@ -184,7 +204,7 @@ function StatusPill({ status }: { status: OrderStatus }) {
   const Icon = style.icon
   return (
     <span className={cn('pill', style.color)}>
-      <Icon className="h-3.5 w-3.5" />
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       {STATUS_LABELS[status]}
     </span>
   )

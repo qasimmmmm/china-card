@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arrival Card — Online Filing (DEMO MOCK)</title>
+  <style>
+    :root { --gov:#b9282e; --ink:#1f2937; --line:#d8dce3; --bg:#f3f5f8; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color:var(--ink); background:var(--bg); }
+    .ribbon { background:#fde68a; color:#7c5b00; text-align:center; font-size:12px; padding:6px; font-weight:700; letter-spacing:.02em; }
+    header { background:linear-gradient(180deg,#a51f25,#8c1a20); color:#fff; padding:14px 0; }
+    .wrap { max-width:880px; margin:0 auto; padding:0 18px; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .seal { width:40px; height:40px; border-radius:50%; background:#fff3; border:2px solid #fff8; display:flex; align-items:center; justify-content:center; font-size:20px; }
+    .brand h1 { font-size:17px; margin:0; }
+    .brand p { margin:2px 0 0; font-size:12px; opacity:.85; }
+    main { padding:26px 0 60px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:22px; }
+    h2 { font-size:15px; margin:22px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--gov); color:#7c1c20; }
+    h2:first-child { margin-top:4px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 18px; }
+    .full { grid-column:1 / -1; }
+    label { display:block; font-size:12.5px; font-weight:600; margin-bottom:5px; }
+    input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px; font-size:14px; background:#fff; }
+    input:focus, select:focus, textarea:focus { outline:2px solid #b9282e44; border-color:#b9282e; }
+    .req::after { content:" *"; color:var(--gov); }
+    .actions { margin-top:24px; display:flex; gap:12px; align-items:center; }
+    button { background:var(--gov); color:#fff; border:0; padding:12px 22px; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; }
+    button:hover { background:#9a2026; }
+    .note { font-size:12px; color:#6b7280; }
+    /* confirmation */
+    #confirmation { display:none; text-align:center; padding:30px 10px; }
+    #confirmation .ok { width:64px;height:64px;border-radius:50%;background:#dcfce7;color:#15803d;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px; }
+    #confirmationCode { font-family:ui-monospace,Menlo,monospace; font-size:22px; font-weight:800; letter-spacing:1px; color:#111827; }
+    #qr { width:140px;height:140px;margin:16px auto 0;display:grid;grid-template-columns:repeat(11,1fr);gap:0;border:6px solid #fff;box-shadow:0 0 0 1px var(--line); }
+    #qr span{display:block;width:100%;padding-bottom:100%;}
+  </style>
+</head>
+<body>
+  <div class="ribbon">⚠ DEMO / MOCK PORTAL — a local stand-in for the official NIA Arrival Card form, used to test the automation. This is NOT a real government website.</div>
+  <header>
+    <div class="wrap brand">
+      <div class="seal">🛂</div>
+      <div>
+        <h1>National Immigration Administration — Arrival Card</h1>
+        <p>Online filing for foreign nationals · 外国人入境卡</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <form id="arrivalForm" class="card" autocomplete="off" novalidate>
+      <h2>Personal information</h2>
+      <div class="grid">
+        <div><label for="surname" class="req">Surname / Family name</label><input id="surname" name="surname" /></div>
+        <div><label for="given" class="req">Given name(s)</label><input id="given" name="given" /></div>
+        <div><label for="sex" class="req">Sex</label>
+          <select id="sex"><option value=""></option><option>Male</option><option>Female</option></select></div>
+        <div><label for="dob" class="req">Date of birth</label><input id="dob" type="date" /></div>
+        <div><label for="nationality" class="req">Nationality</label>
+          <select id="nationality"><option value=""></option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>Australia</option><option>Germany</option><option>France</option><option>Japan</option><option>Singapore</option><option>India</option><option>Other</option></select></div>
+        <div><label for="cob">Country of birth</label>
+          <select id="cob"><option value=""></option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>Australia</option><option>Germany</option><option>France</option><option>Other</option></select></div>
+      </div>
+
+      <h2>Travel document</h2>
+      <div class="grid">
+        <div><label for="docType" class="req">Document type</label>
+          <select id="docType"><option value=""></option><option>Ordinary Passport</option><option>Diplomatic Passport</option><option>Service / Official Passport</option><option>Travel Document</option></select></div>
+        <div><label for="passportNo" class="req">Passport / document number</label><input id="passportNo" /></div>
+        <div><label for="expiry" class="req">Passport expiry date</label><input id="expiry" type="date" /></div>
+        <div><label for="issuer">Issuing country / authority</label>
+          <select id="issuer"><option value=""></option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>Australia</option><option>Other</option></select></div>
+        <div><label for="visaNo">Visa / permit number</label><input id="visaNo" /></div>
+      </div>
+
+      <h2>Trip & itinerary</h2>
+      <div class="grid">
+        <div><label for="transport" class="req">Transport mode</label>
+          <select id="transport"><option value=""></option><option>Air / Flight</option><option>Land / Train</option><option>Land / Road</option><option>Sea / Ferry / Vessel</option></select></div>
+        <div><label for="carrier" class="req">Flight / train / vessel number</label><input id="carrier" /></div>
+        <div><label for="arrival" class="req">Arrival date</label><input id="arrival" type="date" /></div>
+        <div><label for="port" class="req">Port of entry</label><input id="port" /></div>
+        <div><label for="entryCity" class="req">City of entry</label>
+          <select id="entryCity"><option value=""></option><option>Beijing</option><option>Shanghai</option><option>Guangzhou</option><option>Shenzhen</option><option>Chengdu</option><option>Other</option></select></div>
+        <div><label for="purpose" class="req">Purpose of visit</label>
+          <select id="purpose"><option value=""></option><option>Tourism / Sightseeing</option><option>Business</option><option>Visiting relatives / friends</option><option>Conference / Exchange</option><option>Study</option><option>Work / Employment</option><option>Transit</option><option>Official</option><option>Other</option></select></div>
+        <div><label for="destCity">Destination city</label>
+          <select id="destCity"><option value=""></option><option>Beijing</option><option>Shanghai</option><option>Guangzhou</option><option>Shenzhen</option><option>Chengdu</option><option>Other</option></select></div>
+        <div><label for="inviter">Inviting party (if any)</label><input id="inviter" /></div>
+        <div class="full"><label for="addr" class="req">Accommodation address in China</label><textarea id="addr" rows="2"></textarea></div>
+      </div>
+
+      <h2>Contact & departure</h2>
+      <div class="grid">
+        <div><label for="phone" class="req">Phone number</label><input id="phone" /></div>
+        <div><label for="email">Email address</label><input id="email" /></div>
+        <div class="full"><label for="departure">Departure date & transport details</label><input id="departure" /></div>
+      </div>
+
+      <label style="margin-top:18px;display:flex;gap:8px;align-items:flex-start;font-weight:500">
+        <input type="checkbox" id="truth" style="width:auto;margin-top:3px" />
+        <span>I declare the information provided is true and accurate.</span>
+      </label>
+
+      <div class="actions">
+        <button type="button" id="submitBtn">Submit declaration</button>
+        <span class="note">A QR code will be generated for presentation at the border.</span>
+      </div>
+      <p id="formError" class="note" style="color:#b9282e;margin-top:10px"></p>
+    </form>
+
+    <div id="confirmation" class="card">
+      <div class="ok">✓</div>
+      <h2 style="border:0;color:#15803d;justify-self:center;display:inline-block">Arrival Card submitted successfully</h2>
+      <p class="note">Present this confirmation and QR code to the immigration officer on arrival.</p>
+      <p style="margin:14px 0 2px">Confirmation number</p>
+      <div id="confirmationCode">—</div>
+      <div id="qr"></div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var form = document.getElementById('arrivalForm');
+      var conf = document.getElementById('confirmation');
+      var btn = document.getElementById('submitBtn');
+      function rand(n){ var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s=''; for(var i=0;i<n;i++) s+=a[Math.floor(Math.random()*a.length)]; return s; }
+      btn.addEventListener('click', function () {
+        var required = ['surname','given','passportNo','arrival','port','addr'];
+        var missing = required.filter(function(id){ return !document.getElementById(id).value.trim(); });
+        var err = document.getElementById('formError');
+        if (!document.getElementById('truth').checked) missing.push('declaration');
+        if (missing.length) { err.textContent = 'Please complete required fields: ' + missing.join(', '); return; }
+        err.textContent = '';
+        var code = 'CN-AC-' + rand(4) + '-' + rand(4);
+        document.getElementById('confirmationCode').textContent = code;
+        // draw a deterministic QR-like grid
+        var qr = document.getElementById('qr'); qr.innerHTML='';
+        var seed = 0; for (var i=0;i<code.length;i++) seed += code.charCodeAt(i)*(i+7);
+        for (var j=0;j<121;j++){ seed = (seed*1103515245+12345) & 0x7fffffff; var on = ((seed>>8)%100)<48; var c=document.createElement('span'); c.style.background = on ? '#111827':'#fff'; qr.appendChild(c); }
+        form.style.display='none'; conf.style.display='block';
+        conf.setAttribute('data-confirmed','true');
+      });
+    })();
+  </script>
+</body>
+</html>

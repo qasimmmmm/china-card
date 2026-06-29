@@ -26,7 +26,7 @@ export function SampleDocument() {
           <ul className="mt-6 space-y-3">
             {included.map((item) => (
               <li key={item} className="flex items-start gap-3">
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+                <CheckCircle2  className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
                 <span className="text-white/90">{item}</span>
               </li>
             ))}
@@ -42,7 +42,7 @@ export function SampleDocument() {
                   <p className="text-lg font-bold">Entry Confirmation</p>
                 </div>
                 <span className="pill bg-white/15 text-white">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Confirmed
+                  <CheckCircle2  className="h-3.5 w-3.5" aria-hidden="true" /> Confirmed
                 </span>
               </div>
               <div className="grid grid-cols-[1fr_auto] gap-5 p-6">
@@ -71,7 +71,7 @@ export function SampleDocument() {
                 </div>
               </div>
               <div className="flex items-center gap-2 border-t border-line bg-surface-soft px-6 py-3 text-sm text-ink-soft">
-                <ShieldCheck className="h-4 w-4 text-brand-600" />
+                <ShieldCheck  className="h-4 w-4 text-brand-600" aria-hidden="true" />
                 Checked for errors before submission
               </div>
             </div>

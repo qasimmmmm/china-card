@@ -32,7 +32,7 @@ export function CookieConsent() {
     <div className="fixed inset-x-0 bottom-0 z-[60] p-3 sm:p-4">
       <div className="container">
         <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 shadow-card-hover sm:flex-row sm:items-center sm:gap-5 sm:p-5">
-          <Cookie className="hidden h-6 w-6 shrink-0 text-brand-600 sm:block" />
+          <Cookie  className="hidden h-6 w-6 shrink-0 text-brand-600 sm:block" aria-hidden="true" />
           <p className="flex-1 text-sm text-ink-soft">
             We use essential cookies to run this site and, with your consent, analytics cookies to improve it.
             See our{' '}
@@ -53,7 +53,7 @@ export function CookieConsent() {
               aria-label="Dismiss"
               className="ml-1 text-ink-muted hover:text-navy"
             >
-              <X className="h-4 w-4" />
+              <X  className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         </div>

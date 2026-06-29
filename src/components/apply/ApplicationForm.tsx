@@ -158,7 +158,7 @@ export function ApplicationForm({ initialPlan = 'standard' }: { initialPlan?: Pl
                         !done && !active && 'bg-line text-ink-muted',
                       )}
                     >
-                      {done ? <Check className="h-4 w-4" /> : i + 1}
+                      {done ? <Check  className="h-4 w-4" aria-hidden="true" /> : i + 1}
                     </span>
                     <span className={cn('text-sm font-semibold', active ? 'text-navy' : 'text-ink-soft')}>
                       {s.title}
@@ -213,7 +213,7 @@ export function ApplicationForm({ initialPlan = 'standard' }: { initialPlan?: Pl
 
             {serverError && (
               <div className="mt-4 flex items-start gap-2 rounded-xl border border-accent/30 bg-accent/5 p-3 text-sm text-accent-dark">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <AlertCircle  className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 {serverError}
               </div>
             )}
@@ -222,7 +222,7 @@ export function ApplicationForm({ initialPlan = 'standard' }: { initialPlan?: Pl
             <div className="mt-6 flex items-center justify-between gap-3">
               {step > 0 ? (
                 <button type="button" onClick={back} className="btn btn-outline btn-md">
-                  <ChevronLeft className="h-4 w-4" /> Back
+                  <ChevronLeft  className="h-4 w-4" aria-hidden="true" /> Back
                 </button>
               ) : (
                 <span />
@@ -230,17 +230,17 @@ export function ApplicationForm({ initialPlan = 'standard' }: { initialPlan?: Pl
 
               {step < REVIEW ? (
                 <button type="button" onClick={next} className="btn-primary btn-md">
-                  Continue <ChevronRight className="h-4 w-4" />
+                  Continue <ChevronRight  className="h-4 w-4" aria-hidden="true" />
                 </button>
               ) : (
                 <button type="submit" disabled={submitting} className="btn-primary btn-lg">
                   {submitting ? (
                     <>
-                      <Loader2 className="h-5 w-5 animate-spin" /> Submitting…
+                      <Loader2  className="h-5 w-5 animate-spin" aria-hidden="true" /> Submitting…
                     </>
                   ) : (
                     <>
-                      Submit application <ChevronRight className="h-5 w-5" />
+                      Submit application <ChevronRight  className="h-5 w-5" aria-hidden="true" />
                     </>
                   )}
                 </button>
@@ -249,7 +249,7 @@ export function ApplicationForm({ initialPlan = 'standard' }: { initialPlan?: Pl
           </form>
 
           <p className="mt-6 flex items-center gap-2 text-xs text-ink-muted">
-            <Lock className="h-3.5 w-3.5 text-success" />
+            <Lock  className="h-3.5 w-3.5 text-success" aria-hidden="true" />
             Your information is encrypted in transit. We never sell your data.
           </p>
         </div>
@@ -323,7 +323,7 @@ function ReviewCard({
                     onClick={() => onEdit(i)}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
                   >
-                    <Pencil className="h-3 w-3" /> Edit
+                    <Pencil  className="h-3 w-3" aria-hidden="true" /> Edit
                   </button>
                 </div>
                 <dl className="grid gap-x-6 gap-y-3 px-4 py-4 sm:grid-cols-2">
@@ -358,7 +358,7 @@ function ReviewCard({
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-navy">{p.name}</span>
-                  {active && <CheckCircle2 className="h-5 w-5 text-brand-600" />}
+                  {active && <CheckCircle2  className="h-5 w-5 text-brand-600" aria-hidden="true" />}
                 </div>
                 <p className="text-xs text-ink-muted">{p.turnaround}</p>
                 <p className="mt-2 text-xl font-extrabold text-brand-700">{formatUSD(p.price)}</p>
@@ -406,7 +406,7 @@ function SuccessPanel({ result, email }: { result: OrderResult; email: string })
   return (
     <div className="mx-auto max-w-2xl text-center">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-light">
-        <CheckCircle2 className="h-9 w-9 text-success" />
+        <CheckCircle2  className="h-9 w-9 text-success" aria-hidden="true" />
       </div>
       <h2 className="mt-5 text-2xl font-extrabold text-navy sm:text-3xl">Application received</h2>
       <p className="mt-3 text-ink-soft">
@@ -447,7 +447,7 @@ function SuccessPanel({ result, email }: { result: OrderResult; email: string })
       </div>
 
       <p className="mx-auto mt-6 flex max-w-md items-center justify-center gap-2 text-xs text-ink-muted">
-        <ShieldCheck className="h-4 w-4 text-success" />
+        <ShieldCheck  className="h-4 w-4 text-success" aria-hidden="true" />
         Save your reference <strong className="text-ink">{result.reference}</strong> to check status anytime.
       </p>
     </div>

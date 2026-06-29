@@ -41,14 +41,14 @@ export default function RequirementsPage() {
             <div className="card p-6 sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-bold text-navy">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-success-light text-success-dark">
-                  <Check className="h-5 w-5" />
+                  <Check  className="h-5 w-5" aria-hidden="true" />
                 </span>
                 You need an Arrival Card if…
               </h2>
               <ul className="mt-5 space-y-3">
                 {need.map((n) => (
                   <li key={n} className="flex items-start gap-3 text-[0.95rem] text-ink">
-                    <Check className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" />
+                    <Check  className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" aria-hidden="true" />
                     {n}
                   </li>
                 ))}
@@ -57,7 +57,7 @@ export default function RequirementsPage() {
             <div className="card p-6 sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-bold text-navy">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-tint text-brand-700">
-                  <X className="h-5 w-5" />
+                  <X  className="h-5 w-5" aria-hidden="true" />
                 </span>
                 You may be exempt if…
               </h2>
@@ -75,12 +75,12 @@ export default function RequirementsPage() {
           {/* Documents */}
           <div className="card p-6 sm:p-8">
             <h2 className="flex items-center gap-2 text-xl font-bold text-navy">
-              <FileText className="h-5 w-5 text-brand-600" /> Documents & information you’ll need
+              <FileText  className="h-5 w-5 text-brand-600" aria-hidden="true" /> Documents & information you’ll need
             </h2>
             <ul className="mt-5 grid gap-3 sm:grid-cols-2">
               {requirements.map((r) => (
                 <li key={r} className="flex items-start gap-3 rounded-xl border border-line bg-surface-soft p-4">
-                  <Check className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" />
+                  <Check  className="mt-0.5 h-4.5 w-4.5 shrink-0 text-success" aria-hidden="true" />
                   <span className="text-sm text-ink">{r}</span>
                 </li>
               ))}
@@ -91,7 +91,7 @@ export default function RequirementsPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="card p-6 sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-bold text-navy">
-                <CalendarClock className="h-5 w-5 text-brand-600" /> When to file
+                <CalendarClock  className="h-5 w-5 text-brand-600" aria-hidden="true" /> When to file
               </h2>
               <p className="prose-clean mt-4">
                 The Arrival Card must be completed <strong>within 72 hours (3 days) before arrival</strong> — it
@@ -102,7 +102,7 @@ export default function RequirementsPage() {
             </div>
             <div className="card p-6 sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-bold text-navy">
-                <Plane className="h-5 w-5 text-brand-600" /> 240-hour visa-free transit
+                <Plane  className="h-5 w-5 text-brand-600" aria-hidden="true" /> 240-hour visa-free transit
               </h2>
               <p className="prose-clean mt-4">
                 Eligible travelers from 55+ countries can transit visa-free for up to 240 hours (10 days) through
@@ -119,7 +119,7 @@ export default function RequirementsPage() {
               Start your guided application and we’ll handle the rest — reviewed, checked, and submitted.
             </p>
             <Link href="/apply" className="btn-lg mt-6 inline-flex bg-white !text-brand-700 hover:bg-white/90">
-              Start my application <ChevronRight className="h-5 w-5" />
+              Start my application <ChevronRight  className="h-5 w-5" aria-hidden="true" />
             </Link>
           </div>
         </div>

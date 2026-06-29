@@ -21,24 +21,24 @@ export default function ContactPage() {
         <div className="container grid gap-10 lg:grid-cols-[1fr_1.3fr]">
           <div className="space-y-4">
             <div className="card p-5">
-              <Mail className="h-6 w-6 text-brand-600" />
+              <Mail  className="h-6 w-6 text-brand-600" aria-hidden="true" />
               <p className="mt-3 font-semibold text-navy">Email us</p>
               <a href={`mailto:${site.supportEmail}`} className="link-underline text-sm">
                 {site.supportEmail}
               </a>
             </div>
             <div className="card p-5">
-              <Clock className="h-6 w-6 text-brand-600" />
+              <Clock  className="h-6 w-6 text-brand-600" aria-hidden="true" />
               <p className="mt-3 font-semibold text-navy">Support hours</p>
               <p className="text-sm text-ink-soft">24 hours a day, 7 days a week — including weekends and holidays.</p>
             </div>
             <div className="card p-5">
-              <MessageSquare className="h-6 w-6 text-brand-600" />
+              <MessageSquare  className="h-6 w-6 text-brand-600" aria-hidden="true" />
               <p className="mt-3 font-semibold text-navy">Average response</p>
               <p className="text-sm text-ink-soft">Around 30 minutes for most enquiries.</p>
             </div>
             <div className="flex items-start gap-3 rounded-2xl border border-line bg-surface-soft p-5">
-              <LifeBuoy className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+              <LifeBuoy  className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
               <p className="text-sm text-ink-soft">
                 Have an order? Include your reference (e.g. <span className="font-mono">CAC-••••-••••</span>) so we can
                 help faster. You can also{' '}

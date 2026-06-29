@@ -85,6 +85,57 @@ export async function fillAll(page, fields) {
   return results
 }
 
+/** Tick the truthfulness/declaration checkbox if the form has one. */
+export async function tickDeclaration(page) {
+  try {
+    const cb = await firstVisible(page.locator('input[type="checkbox"]'))
+    if (cb && !(await cb.isChecked().catch(() => false))) {
+      await cb.check({ timeout: 2000 }).catch(() => cb.click({ timeout: 2000 }))
+    }
+  } catch {
+    /* optional */
+  }
+}
+
+/**
+ * Click the submit control and read back the official confirmation number.
+ * Returns { ok, code } on success or { ok:false, reason } otherwise.
+ * Never solves CAPTCHAs — if the portal blocks automated submit, this fails
+ * cleanly and the operator handles it.
+ */
+export async function submitAndConfirm(page, { submitHints, confirmationSelector }) {
+  // Find and click the submit button by any of the hint texts.
+  let clicked = false
+  for (const hint of submitHints) {
+    const byRole = await firstVisible(page.getByRole('button', { name: new RegExp(escapeRe(hint), 'i') }))
+    const btn = byRole || (await firstVisible(page.locator(`button:has-text("${cssEsc(hint)}"), [role="button"]:has-text("${cssEsc(hint)}")`)))
+    if (btn) {
+      await btn.click({ timeout: 4000 }).catch(() => {})
+      clicked = true
+      break
+    }
+  }
+  if (!clicked) return { ok: false, reason: 'submit button not found' }
+
+  // Wait for a confirmation number to appear.
+  try {
+    await page.waitForFunction(
+      (sel) => {
+        const el = document.querySelector(sel)
+        const t = el && el.textContent ? el.textContent.trim() : ''
+        return t && t !== '—'
+      },
+      confirmationSelector,
+      { timeout: 12000 },
+    )
+    const code = (await page.locator(confirmationSelector).first().textContent())?.trim()
+    if (code && code !== '—') return { ok: true, code }
+    return { ok: false, reason: 'confirmation empty' }
+  } catch {
+    return { ok: false, reason: 'no confirmation detected (CAPTCHA or different layout?)' }
+  }
+}
+
 function escapeRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

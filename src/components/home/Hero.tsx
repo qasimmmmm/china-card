@@ -15,7 +15,7 @@ export function Hero() {
         {/* Left: copy */}
         <div className="max-w-xl">
           <span className="pill bg-white/12 text-white ring-1 ring-inset ring-white/20">
-            <ShieldCheck className="h-3.5 w-3.5 text-gold" />
+            <ShieldCheck  className="h-3.5 w-3.5 text-gold" aria-hidden="true" />
             Now required for entry — effective Nov 2025
           </span>
 
@@ -27,7 +27,7 @@ export function Hero() {
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link href="/apply" className="btn-primary btn-lg bg-white !text-brand-700 hover:bg-white/90 hover:!text-brand-800">
               {hero.primaryCta}
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight  className="h-5 w-5" aria-hidden="true" />
             </Link>
             <Link
               href="/#how-it-works"
@@ -65,7 +65,7 @@ export function Hero() {
                   <span className="text-sm font-semibold text-navy">Arrival Card · Confirmation</span>
                 </div>
                 <span className="pill bg-success-light text-success-dark">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Ready
+                  <CheckCircle2  className="h-3.5 w-3.5" aria-hidden="true" /> Ready
                 </span>
               </div>
 
@@ -90,20 +90,20 @@ export function Hero() {
               </div>
 
               <div className="flex items-center gap-2 border-t border-line bg-success-light/60 px-5 py-3 text-sm text-success-dark">
-                <ShieldCheck className="h-4 w-4" />
+                <ShieldCheck  className="h-4 w-4" aria-hidden="true" />
                 <span className="font-medium">Reviewed & checked by our team</span>
               </div>
             </div>
 
             {/* Floating badges */}
             <div className="absolute -left-4 top-10 hidden rounded-xl bg-white p-2.5 shadow-card sm:flex sm:items-center sm:gap-2">
-              <Lock className="h-4 w-4 text-brand-600" />
+              <Lock  className="h-4 w-4 text-brand-600" aria-hidden="true" />
               <span className="text-xs font-semibold text-navy">256-bit secure</span>
             </div>
             <div className="absolute -bottom-4 -right-2 hidden rounded-xl bg-white p-2.5 shadow-card sm:flex sm:items-center sm:gap-1.5">
               <div className="flex">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-gold text-gold" />
+                  <Star  key={i} className="h-3.5 w-3.5 fill-gold text-gold" aria-hidden="true" />
                 ))}
               </div>
               <span className="text-xs font-semibold text-navy">Trusted service</span>

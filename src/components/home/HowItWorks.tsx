@@ -36,7 +36,7 @@ export function HowItWorks() {
         <div className="mt-10 flex justify-center">
           <Link href="/apply" className="btn-primary btn-lg">
             Start my application
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight  className="h-5 w-5" aria-hidden="true" />
           </Link>
         </div>
       </div>

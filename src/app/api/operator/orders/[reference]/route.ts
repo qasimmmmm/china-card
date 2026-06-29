@@ -28,7 +28,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ refere
   if (!isOperator(req)) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   const { reference } = await params
 
-  let body: { status?: string; note?: string }
+  let body: { status?: string; note?: string; confirmation?: { reference?: string; portal?: string } }
   try {
     body = await req.json()
   } catch {
@@ -39,7 +39,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ refere
     return NextResponse.json({ error: `status must be one of: ${VALID.join(', ')}` }, { status: 400 })
   }
 
-  const updated = await updateOrderStatus(reference, body.status as OrderStatus, body.note)
+  const official =
+    body.confirmation?.reference
+      ? { reference: String(body.confirmation.reference), portal: String(body.confirmation.portal || 'official') }
+      : undefined
+
+  const updated = await updateOrderStatus(reference, body.status as OrderStatus, body.note, official)
   if (!updated) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   return NextResponse.json({ ok: true, order: updated })
 }

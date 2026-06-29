@@ -46,7 +46,7 @@ export function LegalLayout({
             <div className="prose-clean max-w-prose">{children}</div>
 
             <div className="mt-10 flex items-start gap-3 rounded-2xl border border-line bg-surface-soft p-5">
-              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+              <ShieldAlert  className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
               <p className="text-sm leading-relaxed text-ink-soft">{disclaimer.full}</p>
             </div>
           </div>

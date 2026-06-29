@@ -100,19 +100,35 @@ the filesystem is **ephemeral**, so for production connect a database (Vercel
 Postgres, Neon, Supabase, etc.) and implement the `postgres` driver branch in
 `src/lib/store.ts` (the interface is already async and pluggable).
 
-## 🤖 Operator automation worker
+## 🤖 Automation worker — fully automatic filing
 
-The `worker/` folder is a standalone tool your fulfillment team runs locally. It pulls
-submitted orders and pre‑fills the official NIA portal for a human to verify and
-submit. See [`worker/README.md`](worker/README.md). It is intentionally excluded from
-the web build.
+The `worker/` folder is a standalone tool (excluded from the web build) that turns each
+submitted order into a filed Arrival Card **automatically**:
+
+```
+Customer submits YOUR form → order queued → worker pulls it → opens the portal,
+fills every field, submits, reads the confirmation number → marks the order
+"completed" and pushes the confirmation back (shown on /track).
+```
+
+It ships with a bundled **mock NIA portal** so the whole pipeline is a complete,
+runnable, testable working model out of the box — the same code targets the real NIA
+form by setting `WORKER_PORTAL_MODE=official`.
 
 ```bash
 cd worker && npm install && npm run install-browser
-npm run queue     # list the queue
-npm run dry-run   # show the field mapping
-npm start         # process in a headed browser (human reviews & submits)
+# (or, if the bundled Chromium download is blocked, drive an installed browser:)
+#   export WORKER_BROWSER_CHANNEL=chrome
+npm start          # WATCH: auto-process new orders as they arrive (fully automatic)
+npm run auto       # process the current queue once, automatically
+npm run review     # headed: bot fills, a human verifies & submits
+npm run dry-run    # show the field mapping (no browser)
 ```
+
+It never solves CAPTCHAs or bypasses bot-detection; if the real portal blocks an
+automated submit, the order is flagged `action_required` for a human. See
+[`worker/README.md`](worker/README.md) for details. For a government site, the
+human-in-the-loop `--review` mode is the safest, most compliant choice.
 
 ## ▲ Deploy to Vercel
 

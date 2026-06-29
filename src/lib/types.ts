@@ -25,6 +25,13 @@ export interface OrderEvent {
   note?: string
 }
 
+/** Confirmation captured from the official (or mock) portal by the worker. */
+export interface OfficialConfirmation {
+  reference: string
+  portal: string
+  submittedAt: string
+}
+
 export interface Order {
   reference: string
   plan: PlanId
@@ -37,4 +44,6 @@ export interface Order {
   createdAt: string
   updatedAt: string
   events: OrderEvent[]
+  /** Set once the automation submits to the official portal. */
+  official?: OfficialConfirmation
 }

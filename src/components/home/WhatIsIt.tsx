@@ -23,7 +23,7 @@ export function WhatIsIt() {
             <dl className="mt-5 divide-y divide-line">
               {whatIsIt.facts.map((f) => (
                 <div key={f.k} className="flex items-start gap-3 py-3.5">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+                  <CheckCircle2  className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
                   <div>
                     <dt className="font-semibold text-navy">{f.k}</dt>
                     <dd className="text-sm text-ink-soft">{f.v}</dd>

@@ -18,14 +18,14 @@ export function FinalCta() {
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/apply" className="btn-lg bg-white !text-brand-700 hover:bg-white/90">
                 Start my application
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight  className="h-5 w-5" aria-hidden="true" />
               </Link>
               <Link href="/track" className="btn btn-lg border border-white/30 bg-white/5 text-white hover:bg-white/12">
                 Track an existing order
               </Link>
             </div>
             <p className="mt-6 flex items-center justify-center gap-2 text-sm text-white/70">
-              <ShieldCheck className="h-4 w-4" />
+              <ShieldCheck  className="h-4 w-4" aria-hidden="true" />
               Independent service · Not affiliated with the Chinese government
             </p>
           </div>

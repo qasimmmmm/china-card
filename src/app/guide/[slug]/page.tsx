@@ -43,7 +43,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <PageHero eyebrow="Travel guide" title={guide.title} description={guide.description}>
         <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-ink-muted">
-          <Clock className="h-4 w-4" /> {guide.readingTime}
+          <Clock  className="h-4 w-4" aria-hidden="true" /> {guide.readingTime}
         </p>
       </PageHero>
 
@@ -69,12 +69,12 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
             {guide.keyTakeaways && guide.keyTakeaways.length > 0 && (
               <div className="not-prose mt-10 rounded-2xl border border-brand-100 bg-brand-50/60 p-6">
                 <h3 className="flex items-center gap-2 text-lg font-bold text-navy">
-                  <Lightbulb className="h-5 w-5 text-brand-600" /> Key takeaways
+                  <Lightbulb  className="h-5 w-5 text-brand-600" aria-hidden="true" /> Key takeaways
                 </h3>
                 <ul className="mt-3 space-y-2">
                   {guide.keyTakeaways.map((t) => (
                     <li key={t} className="flex items-start gap-2 text-sm text-ink-soft">
-                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                      <ChevronRight  className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
                       {t}
                     </li>
                   ))}
@@ -90,7 +90,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 We’ll prepare, review, and submit your China Arrival Card — with a QR code ready to scan.
               </p>
               <Link href="/apply" className="btn-md mt-4 inline-flex bg-white !text-brand-700 hover:bg-white/90">
-                Start application <ChevronRight className="h-4 w-4" />
+                Start application <ChevronRight  className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
 
@@ -100,7 +100,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 {others.map((g) => (
                   <li key={g.slug}>
                     <Link href={`/guide/${g.slug}`} className="group flex items-start gap-2">
-                      <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-brand-600 transition-transform group-hover:translate-x-0.5" />
+                      <ArrowRight  className="mt-1 h-4 w-4 shrink-0 text-brand-600 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                       <span className="text-sm font-medium text-navy group-hover:text-brand-700">{g.title}</span>
                     </Link>
                   </li>
