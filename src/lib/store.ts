@@ -93,7 +93,7 @@ export async function updateOrderStatus(
   reference: string,
   status: OrderStatus,
   note?: string,
-  official?: { reference: string; portal: string },
+  official?: { reference: string; portal: string; receiptImage?: string },
 ): Promise<Order | null> {
   const map = await load()
   const order = map.get(reference.trim().toUpperCase())
@@ -101,7 +101,12 @@ export async function updateOrderStatus(
   order.status = status
   order.updatedAt = new Date().toISOString()
   if (official?.reference) {
-    order.official = { reference: official.reference, portal: official.portal || 'official', submittedAt: order.updatedAt }
+    order.official = {
+      reference: official.reference,
+      portal: official.portal || 'official',
+      submittedAt: order.updatedAt,
+      ...(official.receiptImage ? { receiptImage: official.receiptImage } : {}),
+    }
   }
   order.events.push({ at: order.updatedAt, status, note })
   map.set(order.reference, order)

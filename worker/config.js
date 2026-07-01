@@ -65,6 +65,8 @@ export const config = {
   captchaImageSelector: process.env.WORKER_CAPTCHA_IMAGE || override.captchaImageSelector || '#captcha-image',
   captchaInputSelector: process.env.WORKER_CAPTCHA_INPUT || override.captchaInputSelector || '#captcha-input',
   captchaErrorSelector: process.env.WORKER_CAPTCHA_ERROR || override.captchaErrorSelector || '#captcha-error',
+  // The success/receipt element to screenshot and deliver to the customer as their card.
+  receiptSelector: process.env.WORKER_RECEIPT_SELECTOR || override.receiptSelector || '#confirmation',
   sessionTtlMs: Number(process.env.FILING_SESSION_TTL_MS || 300000),
   // TEST ONLY: reveal the mock's answer so an automated test can play the human.
   // Never enable in production — the whole point is that a real person solves it.

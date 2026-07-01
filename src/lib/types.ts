@@ -30,6 +30,8 @@ export interface OfficialConfirmation {
   reference: string
   portal: string
   submittedAt: string
+  /** Data-URL screenshot of the official receipt/QR delivered to the customer. */
+  receiptImage?: string
 }
 
 export interface Order {

@@ -14,7 +14,7 @@ interface PublicOrder {
   contactName: string
   arrivalDate: string | null
   entryPort: string | null
-  official: { reference: string; portal: string; submittedAt: string } | null
+  official: { reference: string; portal: string; submittedAt: string; receiptImage?: string } | null
   createdAt: string
   updatedAt: string
   events: { at: string; status: OrderStatus; note?: string }[]
@@ -141,20 +141,39 @@ export function TrackClient({ initialRef = '' }: { initialRef?: string }) {
           </div>
 
           {order.official?.reference && (
-            <div className="m-5 mb-0 flex items-center gap-4 rounded-xl border border-success/30 bg-success-light/60 p-4 sm:m-6 sm:mb-0">
-              <div className="rounded-lg border border-success/30 bg-white p-1.5">
-                <QrMock size={64} />
+            <div className="m-5 mb-0 rounded-xl border border-success/30 bg-success-light/60 p-4 sm:m-6 sm:mb-0">
+              <div className="flex items-center gap-4">
+                <div className="rounded-lg border border-success/30 bg-white p-1.5">
+                  <QrMock size={64} />
+                </div>
+                <div>
+                  <p className="flex items-center gap-1.5 text-sm font-bold text-success-dark">
+                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Arrival Card filed
+                  </p>
+                  <p className="mt-0.5 text-sm text-ink-soft">
+                    Official confirmation{' '}
+                    <span className="font-mono font-semibold text-navy">{order.official.reference}</span>. Present
+                    your passport and QR code at immigration.
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="flex items-center gap-1.5 text-sm font-bold text-success-dark">
-                  <CheckCircle2  className="h-4 w-4" aria-hidden="true" /> Arrival Card filed
-                </p>
-                <p className="mt-0.5 text-sm text-ink-soft">
-                  Official confirmation{' '}
-                  <span className="font-mono font-semibold text-navy">{order.official.reference}</span>. Present
-                  your passport and QR code at immigration.
-                </p>
-              </div>
+              {order.official.receiptImage && (
+                <div className="mt-3 border-t border-success/20 pt-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={order.official.receiptImage}
+                    alt="Your official China Arrival Card receipt"
+                    className="mx-auto max-h-80 rounded-lg border border-line bg-white"
+                  />
+                  <a
+                    href={order.official.receiptImage}
+                    download={`china-arrival-card-${order.official.reference}.png`}
+                    className="btn-primary btn-sm mt-3 w-full"
+                  >
+                    Download my Arrival Card
+                  </a>
+                </div>
+              )}
             </div>
           )}
 

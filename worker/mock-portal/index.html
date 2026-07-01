@@ -62,6 +62,7 @@
           <select id="nationality"><option value=""></option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>Australia</option><option>Germany</option><option>France</option><option>Japan</option><option>Singapore</option><option>India</option><option>Other</option></select></div>
         <div><label for="cob">Country of birth</label>
           <select id="cob"><option value=""></option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>Australia</option><option>Germany</option><option>France</option><option>Other</option></select></div>
+        <div><label for="cityOfBirth">City of birth</label><input id="cityOfBirth" /></div>
       </div>
 
       <h2>Travel document</h2>
@@ -78,14 +79,14 @@
       <h2>Trip & itinerary</h2>
       <div class="grid">
         <div><label for="transport" class="req">Transport mode</label>
-          <select id="transport"><option value=""></option><option>Air / Flight</option><option>Land / Train</option><option>Land / Road</option><option>Sea / Ferry / Vessel</option></select></div>
+          <select id="transport"><option value=""></option><option>Flight</option><option>Train</option><option>Automobile</option><option>Vessel</option><option>On Foot</option><option>Automobile and On Foot</option></select></div>
         <div><label for="carrier" class="req">Flight / train / vessel number</label><input id="carrier" /></div>
         <div><label for="arrival" class="req">Arrival date</label><input id="arrival" type="date" /></div>
         <div><label for="port" class="req">Port of entry</label><input id="port" /></div>
         <div><label for="entryCity" class="req">City of entry</label>
           <select id="entryCity"><option value=""></option><option>Beijing</option><option>Shanghai</option><option>Guangzhou</option><option>Shenzhen</option><option>Chengdu</option><option>Other</option></select></div>
         <div><label for="purpose" class="req">Purpose of visit</label>
-          <select id="purpose"><option value=""></option><option>Tourism / Sightseeing</option><option>Business</option><option>Visiting relatives / friends</option><option>Conference / Exchange</option><option>Study</option><option>Work / Employment</option><option>Transit</option><option>Official</option><option>Other</option></select></div>
+          <select id="purpose"><option value=""></option><option>Conference/Business</option><option>Visit</option><option>Sightseeing/Leisure</option><option>Visiting Friends/Relatives</option><option>Work</option><option>Study</option><option>Permanent Residence</option><option>Return to Country of Residence</option><option>Service (Employee)</option><option>Other</option></select></div>
         <div><label for="destCity">Destination city</label>
           <select id="destCity"><option value=""></option><option>Beijing</option><option>Shanghai</option><option>Guangzhou</option><option>Shenzhen</option><option>Chengdu</option><option>Other</option></select></div>
         <div><label for="inviter">Inviting party (if any)</label><input id="inviter" /></div>
@@ -94,6 +95,8 @@
 
       <h2>Contact & departure</h2>
       <div class="grid">
+        <div><label for="areaCode">Phone area code</label>
+          <select id="areaCode"><option value=""></option><option>+1 (United States / Canada)</option><option>+44 (United Kingdom)</option><option>+86 (China)</option><option>+61 (Australia)</option><option>+49 (Germany)</option><option>+81 (Japan)</option><option>+other</option></select></div>
         <div><label for="phone" class="req">Phone number</label><input id="phone" /></div>
         <div><label for="email">Email address</label><input id="email" /></div>
         <div class="full"><label for="departure">Departure date & transport details</label><input id="departure" /></div>

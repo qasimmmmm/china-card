@@ -42,11 +42,20 @@ async function launchBrowser() {
   return chromium.launch(opts)
 }
 
-async function elementShot(page, selector) {
+async function elementShot(page, selector, timeout = 8000) {
   const loc = page.locator(selector).first()
-  await loc.waitFor({ state: 'visible', timeout: 8000 })
+  await loc.waitFor({ state: 'visible', timeout })
   const buf = await loc.screenshot()
   return `data:image/png;base64,${buf.toString('base64')}`
+}
+
+async function pageShot(page) {
+  const buf = await page.screenshot({ fullPage: true }).catch(() => page.screenshot())
+  return `data:image/png;base64,${buf.toString('base64')}`
+}
+
+async function hasElement(page, selector) {
+  try { return (await page.locator(selector).count()) > 0 } catch { return false }
 }
 
 async function clickSubmit(page) {
@@ -75,6 +84,9 @@ async function captchaError(page) {
 }
 
 // ── Handlers ──────────────────────────────────────────────
+// /start: open the portal, fill every field, and return a screenshot of the
+// FILLED official form so the customer can review it. Includes a CAPTCHA image
+// only if the portal actually shows one.
 async function handleStart(body) {
   if (!body.reference || !body.application) throw new Error('reference and application are required')
   const browser = await launchBrowser()
@@ -83,15 +95,18 @@ async function handleStart(body) {
   await page.goto(config.portalUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
 
   const results = await fillAll(page, mapApplication({ application: body.application, reference: body.reference }))
-  await tickDeclaration(page)
   const filled = results.filter((r) => r.ok).length
+  const missed = results.filter((r) => !r.ok).map((r) => r.key)
 
-  const image = await elementShot(page, config.captchaImageSelector)
+  const formPreview = await pageShot(page)
   const sessionId = randomUUID()
   sessions.set(sessionId, { browser, context, page, reference: body.reference, createdAt: Date.now() })
 
-  const out = { ok: true, sessionId, filled, total: results.length, captcha: { image, prompt: 'Enter the verification code shown to authorize your submission.' } }
-  if (config.testReveal) out.debugAnswer = await page.locator(config.captchaImageSelector).getAttribute('data-code').catch(() => null)
+  const out = { ok: true, sessionId, filled, total: results.length, missed, formPreview }
+  if (await hasElement(page, config.captchaImageSelector)) {
+    out.captcha = { image: await elementShot(page, config.captchaImageSelector), prompt: 'Enter the verification code shown on the official form.' }
+    if (config.testReveal) out.debugAnswer = await page.locator(config.captchaImageSelector).getAttribute('data-code').catch(() => null)
+  }
   return out
 }
 
@@ -102,33 +117,42 @@ async function endSession(sessionId) {
   await s.browser.close().catch(() => {})
 }
 
-async function handleSolve(body) {
+// /confirm: the customer has reviewed and given consent. Enter any CAPTCHA
+// answer, tick the declaration, submit to the authorities, then capture the
+// official receipt (QR) to deliver back. This final step IS the customer's
+// legal attestation — nothing is submitted without it.
+async function handleConfirm(body) {
   const s = sessions.get(body.sessionId)
   if (!s) throw new Error('session not found or expired')
   const { page } = s
   const answer = String(body.answer || '').trim()
-  if (!answer) throw new Error('answer is required')
 
-  await page.locator(config.captchaInputSelector).first().fill(answer).catch(() => {})
+  if (answer && (await hasElement(page, config.captchaInputSelector))) {
+    await page.locator(config.captchaInputSelector).first().fill(answer).catch(() => {})
+  }
+  await tickDeclaration(page)
   await clickSubmit(page)
 
-  // Wait for either a confirmation number or a CAPTCHA error.
-  const deadline = Date.now() + 8000
+  // Wait for a confirmation number or a CAPTCHA error.
+  const deadline = Date.now() + 12000
   while (Date.now() < deadline) {
     const conf = await readConfirmation(page)
     if (conf) {
+      // Capture the official receipt/QR to deliver to the customer.
+      let receiptImage = null
+      try { receiptImage = await elementShot(page, config.receiptSelector, 4000) } catch { receiptImage = await pageShot(page) }
       await endSession(body.sessionId)
-      return { ok: true, status: 'completed', confirmation: conf, portal: config.portalMode }
+      return { ok: true, status: 'completed', confirmation: conf, receiptImage, portal: config.portalMode }
     }
     if (await captchaError(page)) {
-      const image = await elementShot(page, config.captchaImageSelector) // portal drew a fresh code
-      const out = { ok: true, status: 'captcha', message: 'That code was incorrect — please try the new one.', captcha: { image } }
+      const image = await elementShot(page, config.captchaImageSelector)
+      const out = { ok: true, status: 'captcha', message: 'That verification code was incorrect — please try the new one.', captcha: { image } }
       if (config.testReveal) out.debugAnswer = await page.locator(config.captchaImageSelector).getAttribute('data-code').catch(() => null)
       return out
     }
     await page.waitForTimeout(300)
   }
-  return { ok: false, status: 'pending', message: 'No confirmation yet — the portal may need another step.' }
+  return { ok: false, status: 'pending', message: 'The portal did not confirm — a human may need to finish this submission.' }
 }
 
 // ── Server ────────────────────────────────────────────────
@@ -143,7 +167,7 @@ const server = http.createServer(async (req, res) => {
   try {
     const body = await readBody(req)
     if (url.pathname === '/start') return json(res, 200, await handleStart(body))
-    if (url.pathname === '/solve') return json(res, 200, await handleSolve(body))
+    if (url.pathname === '/confirm' || url.pathname === '/solve') return json(res, 200, await handleConfirm(body))
     if (url.pathname === '/cancel') { await endSession(body.sessionId); return json(res, 200, { ok: true }) }
     return json(res, 404, { error: 'not found' })
   } catch (err) {
@@ -166,7 +190,7 @@ async function main() {
     console.log(`\n🔐 Filing service on http://0.0.0.0:${PORT}`)
     console.log(`   Portal: ${config.portalMode.toUpperCase()} → ${config.portalUrl}`)
     console.log(`   Browser: ${config.browserChannel || 'bundled chromium'} (${config.headless ? 'headless' : 'headed'})`)
-    console.log(`   Customer solves the CAPTCHA in real time. Ctrl+C to stop.\n`)
+    console.log(`   Fills the official form → customer reviews & consents → submits → returns the receipt. Ctrl+C to stop.\n`)
   })
 }
 main()

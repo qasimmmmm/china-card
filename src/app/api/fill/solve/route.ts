@@ -33,7 +33,11 @@ export async function POST(req: Request) {
         body.reference,
         'completed',
         `Filed on the ${(json.portal as string) || 'official'} portal — confirmation ${json.confirmation}.`,
-        { reference: String(json.confirmation), portal: String(json.portal || 'official') },
+        {
+          reference: String(json.confirmation),
+          portal: String(json.portal || 'official'),
+          ...(json.receiptImage ? { receiptImage: String(json.receiptImage) } : {}),
+        },
       )
       if (updated?.contact?.email) {
         await sendConfirmationEmail({
