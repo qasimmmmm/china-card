@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { applicationSchema } from '@/lib/applicationSchema'
 import { buildOrder, publicOrderView } from '@/lib/orders'
 import { saveOrder } from '@/lib/store'
+import { sendSubmittedEmail } from '@/lib/email'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
 
   const order = buildOrder(parsed.data as Record<string, unknown>)
   await saveOrder(order)
+  await sendSubmittedEmail({ to: order.contact.email, name: order.contact.name, reference: order.reference })
 
   return NextResponse.json(
     { ok: true, order: publicOrderView(order) },

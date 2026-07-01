@@ -1,0 +1,35 @@
+{
+  "$comment": "PLACEHOLDER example — the selectors below are NOT the real NIA ones; you MUST replace them with selectors you read from the live form (right-click a field → Inspect). Copy this to selectors.official.json and edit. Loaded ONLY when WORKER_PORTAL_MODE=official. For each field key, give an explicit CSS `selector` (preferred — fastest and unambiguous) and/or `hints` (label/placeholder/name substrings, EN or 中文) used as a fallback. `type` overrides the default control kind (text | select | radio | date). Any key you omit keeps the built-in defaults from mapping.js. NOTE (verified 2026-07): the real NIA PC portal currently has NO login and NO CAPTCHA, so the captcha* selectors below are only a safety net in case that changes.",
+
+  "fields": {
+    "surname":             { "selector": "#passengerSurname",  "hints": ["surname", "family name", "姓"] },
+    "givenNames":          { "selector": "#passengerGivenName", "hints": ["given name", "名"] },
+    "sex":                 { "selector": "select[name='sex']",  "type": "select", "hints": ["sex", "gender", "性别"] },
+    "dob":                 { "selector": "#birthDate",          "type": "date",   "hints": ["date of birth", "出生"] },
+    "nationality":         { "selector": "select[name='nationality']", "type": "select", "hints": ["nationality", "国籍"] },
+    "countryOfBirth":      { "hints": ["country of birth", "出生国"] },
+    "docType":             { "selector": "select[name='docType']", "type": "select", "hints": ["document type", "证件类型"] },
+    "passportNumber":      { "selector": "#docNo",              "hints": ["passport no", "证件号"] },
+    "passportExpiry":      { "selector": "#docExpiry",          "type": "date",   "hints": ["expiry", "有效期"] },
+    "passportIssueCountry":{ "selector": "select[name='issueCountry']", "type": "select", "hints": ["issuing", "签发"] },
+    "visaNumber":          { "hints": ["visa no", "签证号"] },
+    "transportMode":       { "selector": "select[name='transport']", "type": "select", "hints": ["transport", "交通"] },
+    "carrierNumber":       { "selector": "#flightNo",           "hints": ["flight", "航班"] },
+    "arrivalDate":         { "selector": "#arrivalDate",        "type": "date",   "hints": ["arrival", "入境日期"] },
+    "entryPort":           { "selector": "#entryPort",          "hints": ["port of entry", "口岸"] },
+    "entryCity":           { "selector": "select[name='entryCity']", "type": "select", "hints": ["city of entry", "入境城市"] },
+    "purpose":             { "selector": "select[name='purpose']",   "type": "select", "hints": ["purpose", "目的"] },
+    "destinationCity":     { "selector": "select[name='destCity']",  "type": "select", "hints": ["destination", "目的地"] },
+    "addressInChina":      { "selector": "#addressDetail",      "hints": ["address", "住址", "地址"] },
+    "phone":               { "selector": "#mobile",             "hints": ["phone", "mobile", "电话"] },
+    "email":               { "selector": "#email",              "hints": ["email", "邮箱"] },
+    "inviterName":         { "hints": ["inviting", "邀请"] },
+    "departureDetails":    { "hints": ["departure", "离境"] }
+  },
+
+  "submitHints": ["提交申报", "确认提交", "Submit declaration", "Submit", "Confirm"],
+  "confirmationSelector": "#declarationNo",
+  "captchaImageSelector": "img.captcha, #captchaImg",
+  "captchaInputSelector": "input[name='captcha']",
+  "captchaErrorSelector": ".captcha-error, .el-message--error"
+}

@@ -154,6 +154,24 @@ portals need the customer's-own-browser variant.
 > CAPTCHA appears on a fresh Vercel deploy). Step-by-step: [`worker/DEPLOY.md`](worker/DEPLOY.md).
 > A `Dockerfile` with Chromium baked in is included.
 
+### Going live with a real customer
+
+- **Email**: set `RESEND_API_KEY` (+ `EMAIL_FROM`) and the customer automatically gets a
+  "received" email and a "your card is ready" email with their confirmation. Unset = no-op.
+- **Real NIA portal**: set `WORKER_PORTAL_MODE=official` + `OFFICIAL_PORTAL_URL`, and map the
+  real form (no code edits) by copying `worker/selectors.official.example.json` to
+  `worker/selectors.official.json` and filling in the real selectors.
+- **Runbook**: [`worker/OPERATOR-RUNBOOK.md`](worker/OPERATOR-RUNBOOK.md) — the step-by-step for
+  filing your first real customer.
+
+**Verified about the live portal (2026-07, re-verify — it can change):** the real NIA PC portal
+(`s.nia.gov.cn/ArrivalCardFillingPC`) currently has **no login and no CAPTCHA** — just a consent
+checkbox, a passport-OCR image upload, and possible invisible server-side anti-bot (WAF /
+`X-Device-Id` fingerprint). So the model is **operator/customer-assisted**: the bot pre-fills, a
+human verifies every field against the passport, the **customer consents** (it's their legal
+declaration), and a human clicks submit — headed, one at a time, on a normal connection. That
+produces a real confirmation. It is **not** an unattended bot farm, by design and by law.
+
 ## ▲ Deploy to Vercel
 
 1. Push this repo to GitHub (below).

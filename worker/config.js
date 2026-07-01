@@ -1,4 +1,5 @@
 // Worker configuration, read from environment with sensible defaults.
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -10,6 +11,22 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const mode = (process.env.WORKER_PORTAL_MODE || 'mock').toLowerCase()
 const mockPortalUrl = pathToFileURL(path.join(__dirname, 'mock-portal', 'index.html')).href
 const officialUrl = process.env.OFFICIAL_PORTAL_URL || 'https://s.nia.gov.cn/ArrivalCardFillingPC/'
+
+// In official mode, an operator can map the real form WITHOUT editing code by
+// dropping a worker/selectors.official.json file (see selectors.official.example.json).
+// Precedence for every selector: env var > JSON override > built-in default.
+function loadOverride() {
+  if (mode !== 'official') return {}
+  const p = process.env.WORKER_SELECTORS_FILE || path.join(__dirname, 'selectors.official.json')
+  try {
+    if (!fs.existsSync(p)) return {}
+    return JSON.parse(fs.readFileSync(p, 'utf8'))
+  } catch (e) {
+    console.warn(`⚠ selectors override ${p} ignored: ${e.message}`)
+    return {}
+  }
+}
+const override = loadOverride()
 
 export const config = {
   apiBase: process.env.WORKER_API_BASE || 'http://localhost:3000',
@@ -31,8 +48,13 @@ export const config = {
   pullStatus: process.env.WORKER_PULL_STATUS || 'submitted',
 
   // How to submit + where to read the resulting confirmation number.
-  submitHints: ['Submit declaration', 'Submit', '提交申报', '提交', '确认提交', 'Confirm'],
-  confirmationSelector: process.env.WORKER_CONFIRM_SELECTOR || '#confirmationCode',
+  submitHints:
+    (process.env.WORKER_SUBMIT_HINTS ? process.env.WORKER_SUBMIT_HINTS.split('|') : override.submitHints) ||
+    ['Submit declaration', 'Submit', '提交申报', '提交', '确认提交', 'Confirm'],
+  confirmationSelector: process.env.WORKER_CONFIRM_SELECTOR || override.confirmationSelector || '#confirmationCode',
+
+  // Per-field selector/hint overrides for official mode (empty otherwise).
+  fieldOverrides: override.fields || {},
 
   // ── Live CAPTCHA-relay filing service ──────────────────────
   // The customer solves the portal's CAPTCHA themselves, in real time, on your
@@ -40,9 +62,9 @@ export const config = {
   // "wrong code" error on the portal (defaults match the bundled mock).
   filingPort: Number(process.env.FILING_SERVICE_PORT || 4100),
   serviceKey: process.env.FILING_SERVICE_KEY || 'dev-filing-key',
-  captchaImageSelector: process.env.WORKER_CAPTCHA_IMAGE || '#captcha-image',
-  captchaInputSelector: process.env.WORKER_CAPTCHA_INPUT || '#captcha-input',
-  captchaErrorSelector: process.env.WORKER_CAPTCHA_ERROR || '#captcha-error',
+  captchaImageSelector: process.env.WORKER_CAPTCHA_IMAGE || override.captchaImageSelector || '#captcha-image',
+  captchaInputSelector: process.env.WORKER_CAPTCHA_INPUT || override.captchaInputSelector || '#captcha-input',
+  captchaErrorSelector: process.env.WORKER_CAPTCHA_ERROR || override.captchaErrorSelector || '#captcha-error',
   sessionTtlMs: Number(process.env.FILING_SESSION_TTL_MS || 300000),
   // TEST ONLY: reveal the mock's answer so an automated test can play the human.
   // Never enable in production — the whole point is that a real person solves it.

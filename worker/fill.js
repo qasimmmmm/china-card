@@ -44,9 +44,18 @@ async function locate(page, hints) {
   return null
 }
 
+/** Prefer an explicit CSS selector (from an official-mode override); else fall back to label hints. */
+async function locateField(page, field) {
+  if (field.selector) {
+    const bySel = await firstVisible(page.locator(field.selector))
+    if (bySel) return bySel
+  }
+  return locate(page, field.hints || [])
+}
+
 export async function fillField(page, field) {
   try {
-    const el = await locate(page, field.hints)
+    const el = await locateField(page, field)
     if (!el) return { key: field.key, ok: false, reason: 'not found' }
 
     const tag = (await el.evaluate((n) => n.tagName.toLowerCase()).catch(() => '')) || ''

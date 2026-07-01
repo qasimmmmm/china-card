@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { isOperator } from '@/lib/operator'
 import { getOrder, updateOrderStatus } from '@/lib/store'
+import { sendConfirmationEmail } from '@/lib/email'
 import type { OrderStatus } from '@/lib/types'
 
 export const runtime = 'nodejs'
@@ -46,5 +47,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ refere
 
   const updated = await updateOrderStatus(reference, body.status as OrderStatus, body.note, official)
   if (!updated) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
+
+  if (updated.status === 'completed' && updated.official?.reference) {
+    await sendConfirmationEmail({
+      to: updated.contact.email,
+      name: updated.contact.name,
+      reference: updated.reference,
+      confirmation: updated.official.reference,
+      plan: updated.plan,
+    })
+  }
+
   return NextResponse.json({ ok: true, order: updated })
 }
