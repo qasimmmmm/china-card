@@ -54,6 +54,36 @@ The end-to-end demo: start your app, run `npm start` here, submit an application
 the website, and watch the order get filed on the mock portal within seconds — its
 confirmation number then appears on the site's tracking page.
 
+## Live customer-CAPTCHA filing (the recommended model)
+
+Instead of a bot solving the CAPTCHA, **the customer solves their own** — in real
+time, on your website. Run the filing service:
+
+```bash
+npm run serve      # starts the filing service on :4100 (uses system Chrome via WORKER_BROWSER_CHANNEL=chrome)
+```
+
+Then point the site at it (`FILING_SERVICE_URL=http://localhost:4100` in the app's
+env). The flow:
+
+```
+Customer finishes YOUR form → the service opens the portal in a live session and
+fills every field → it screenshots the portal's CAPTCHA and your site shows it to
+the customer → the customer types the code → it's entered into the same session and
+submitted → the official confirmation comes straight back to the customer.
+```
+
+Endpoints (the app calls these server-side with `x-filing-key`): `POST /start`
+`{reference, application}` → `{sessionId, captcha:{image}}`; `POST /solve`
+`{sessionId, answer}` → `{status:"completed", confirmation}` or a fresh
+`{status:"captcha"}` on a wrong code. `GET /health` for readiness.
+
+This is legitimate: a real human completes the human-verification step for their own
+application. It works when the portal uses a **simple image/text CAPTCHA**. If the
+real NIA form uses reCAPTCHA/hCaptcha/behavioral checks, an image can't be relayed —
+use the customer's-own-browser variant instead (a browser extension that autofills
+the official form in the customer's genuine session).
+
 ## What it will and won't do
 
 - ✅ Re-keys exactly the data the traveler already provided.

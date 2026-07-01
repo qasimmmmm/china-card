@@ -33,4 +33,18 @@ export const config = {
   // How to submit + where to read the resulting confirmation number.
   submitHints: ['Submit declaration', 'Submit', '提交申报', '提交', '确认提交', 'Confirm'],
   confirmationSelector: process.env.WORKER_CONFIRM_SELECTOR || '#confirmationCode',
+
+  // ── Live CAPTCHA-relay filing service ──────────────────────
+  // The customer solves the portal's CAPTCHA themselves, in real time, on your
+  // site. These selectors point at the CAPTCHA image, the answer input, and the
+  // "wrong code" error on the portal (defaults match the bundled mock).
+  filingPort: Number(process.env.FILING_SERVICE_PORT || 4100),
+  serviceKey: process.env.FILING_SERVICE_KEY || 'dev-filing-key',
+  captchaImageSelector: process.env.WORKER_CAPTCHA_IMAGE || '#captcha-image',
+  captchaInputSelector: process.env.WORKER_CAPTCHA_INPUT || '#captcha-input',
+  captchaErrorSelector: process.env.WORKER_CAPTCHA_ERROR || '#captcha-error',
+  sessionTtlMs: Number(process.env.FILING_SESSION_TTL_MS || 300000),
+  // TEST ONLY: reveal the mock's answer so an automated test can play the human.
+  // Never enable in production — the whole point is that a real person solves it.
+  testReveal: process.env.FILING_TEST_REVEAL === 'true',
 }

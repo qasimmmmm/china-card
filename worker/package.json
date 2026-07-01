@@ -6,6 +6,7 @@
   "description": "Operator-run automation that maps a customer's submitted application into the official NIA China Arrival Card form for human review and submission.",
   "engines": { "node": ">=18.18.0" },
   "scripts": {
+    "serve": "node filing-service.js",
     "start": "node index.js --watch",
     "auto": "node index.js --auto",
     "watch": "node index.js --watch",

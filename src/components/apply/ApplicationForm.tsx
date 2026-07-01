@@ -22,6 +22,7 @@ import { disclaimer } from '@/lib/site'
 import { formatUSD, cn } from '@/lib/utils'
 import { Icon } from '@/components/ui/Icon'
 import { Field } from './Field'
+import { LiveFiling } from './LiveFiling'
 
 type Values = Record<string, unknown>
 const REVIEW = steps.length
@@ -435,6 +436,10 @@ function SuccessPanel({ result, email }: { result: OrderResult; email: string })
             </dd>
           </div>
         </dl>
+      </div>
+
+      <div className="mx-auto max-w-lg">
+        <LiveFiling reference={result.reference} />
       </div>
 
       <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">

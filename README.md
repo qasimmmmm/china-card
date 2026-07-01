@@ -92,6 +92,8 @@ All env vars are **optional** — the app runs out of the box. See `.env.example
 | `OPERATOR_API_KEY` | Shared secret for the operator API + worker |
 | `OFFICIAL_PORTAL_URL` | Official NIA Arrival Card URL the worker opens |
 | `WORKER_HEADLESS` | Run the worker headless (`true`) or headed (`false`) |
+| `FILING_SERVICE_URL` | URL of the live CAPTCHA-relay filing service (blank = assisted fallback) |
+| `FILING_SERVICE_KEY` | Shared secret between the site and the filing service |
 
 ### Order storage
 
@@ -129,6 +131,21 @@ It never solves CAPTCHAs or bypasses bot-detection; if the real portal blocks an
 automated submit, the order is flagged `action_required` for a human. See
 [`worker/README.md`](worker/README.md) for details. For a government site, the
 human-in-the-loop `--review` mode is the safest, most compliant choice.
+
+### Live customer-CAPTCHA filing (recommended)
+
+The most compliant "hands-off for you" model: **the customer solves their own
+CAPTCHA** during checkout. Run the filing service (`cd worker && npm run serve`) and
+set `FILING_SERVICE_URL`. After the customer submits your form, the service opens the
+portal, fills every field, and **relays the CAPTCHA image to the customer on your
+site**; they type the code, it's submitted, and the official confirmation comes
+straight back — shown on their success screen and `/track`. If the service isn't
+configured/reachable, the site gracefully falls back to assisted (staff) filing.
+
+Verified end-to-end against the bundled mock: form → live fill (21/21 fields) →
+CAPTCHA relayed → wrong code retries → correct code → confirmation synced to the
+order. Works on real portals that use a simple image CAPTCHA; reCAPTCHA/behavioral
+portals need the customer's-own-browser variant.
 
 ## ▲ Deploy to Vercel
 

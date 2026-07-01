@@ -104,6 +104,22 @@
         <span>I declare the information provided is true and accurate.</span>
       </label>
 
+      <h2 style="margin-top:22px">Security verification</h2>
+      <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+        <div>
+          <label>Verification code</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <canvas id="captcha-image" width="150" height="48" style="border:1px solid var(--line);border-radius:7px;background:#f8f4e8"></canvas>
+            <button type="button" id="captcha-refresh" title="New code" style="background:#eef;color:#333;padding:8px 12px;font-size:13px">↻</button>
+          </div>
+        </div>
+        <div style="flex:1;min-width:180px">
+          <label for="captcha-input">Enter the code shown</label>
+          <input id="captcha-input" maxlength="6" autocomplete="off" style="text-transform:uppercase;letter-spacing:2px" />
+        </div>
+      </div>
+      <p id="captcha-error" class="note" style="color:#b9282e;margin-top:6px;display:none">Incorrect verification code. Please try again.</p>
+
       <div class="actions">
         <button type="button" id="submitBtn">Submit declaration</button>
         <span class="note">A QR code will be generated for presentation at the border.</span>
@@ -126,7 +142,31 @@
       var form = document.getElementById('arrivalForm');
       var conf = document.getElementById('confirmation');
       var btn = document.getElementById('submitBtn');
+      var cImg = document.getElementById('captcha-image');
+      var cErr = document.getElementById('captcha-error');
+      var captchaCode = '';
       function rand(n){ var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s=''; for(var i=0;i<n;i++) s+=a[Math.floor(Math.random()*a.length)]; return s; }
+
+      // Draw a noisy 5-char image CAPTCHA (like many government portals use).
+      function drawCaptcha(){
+        captchaCode = rand(5);
+        cImg.setAttribute('data-code', captchaCode); // TEST-ONLY affordance
+        var ctx = cImg.getContext('2d');
+        ctx.clearRect(0,0,150,48); ctx.fillStyle='#f8f4e8'; ctx.fillRect(0,0,150,48);
+        for (var i=0;i<6;i++){ ctx.strokeStyle='rgba('+((i*40)%200)+','+((i*70)%200)+','+((i*90)%200)+',0.5)'; ctx.beginPath(); ctx.moveTo(Math.random()*150,Math.random()*48); ctx.lineTo(Math.random()*150,Math.random()*48); ctx.stroke(); }
+        for (var k=0;k<captchaCode.length;k++){
+          ctx.save();
+          ctx.font = (22+Math.floor(Math.random()*6))+'px Georgia';
+          ctx.fillStyle = 'hsl('+(Math.random()*360)+',60%,30%)';
+          ctx.translate(16+k*26, 34);
+          ctx.rotate((Math.random()-0.5)*0.5);
+          ctx.fillText(captchaCode[k], 0, 0);
+          ctx.restore();
+        }
+      }
+      drawCaptcha();
+      document.getElementById('captcha-refresh').addEventListener('click', function(e){ e.preventDefault(); drawCaptcha(); cErr.style.display='none'; document.getElementById('captcha-input').value=''; });
+
       btn.addEventListener('click', function () {
         var required = ['surname','given','passportNo','arrival','port','addr'];
         var missing = required.filter(function(id){ return !document.getElementById(id).value.trim(); });
@@ -134,9 +174,18 @@
         if (!document.getElementById('truth').checked) missing.push('declaration');
         if (missing.length) { err.textContent = 'Please complete required fields: ' + missing.join(', '); return; }
         err.textContent = '';
+
+        var answer = (document.getElementById('captcha-input').value || '').trim().toUpperCase();
+        if (answer !== captchaCode) {
+          drawCaptcha();
+          cErr.style.display = 'block';
+          document.getElementById('captcha-input').value = '';
+          return;
+        }
+        cErr.style.display='none';
+
         var code = 'CN-AC-' + rand(4) + '-' + rand(4);
         document.getElementById('confirmationCode').textContent = code;
-        // draw a deterministic QR-like grid
         var qr = document.getElementById('qr'); qr.innerHTML='';
         var seed = 0; for (var i=0;i<code.length;i++) seed += code.charCodeAt(i)*(i+7);
         for (var j=0;j<121;j++){ seed = (seed*1103515245+12345) & 0x7fffffff; var on = ((seed>>8)%100)<48; var c=document.createElement('span'); c.style.background = on ? '#111827':'#fff'; qr.appendChild(c); }
