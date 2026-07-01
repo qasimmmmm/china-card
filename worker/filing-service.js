@@ -134,7 +134,7 @@ async function handleSolve(body) {
 // ── Server ────────────────────────────────────────────────
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost`)
-  if (req.method === 'GET' && url.pathname === '/health') {
+  if (req.method === 'GET' && (url.pathname === '/health' || url.pathname === '/')) {
     return json(res, 200, { ok: true, portalMode: config.portalMode, portalUrl: config.portalUrl, sessions: sessions.size })
   }
   if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
@@ -161,8 +161,9 @@ async function main() {
   try { ({ chromium } = await import('playwright')) } catch {
     console.error('✖ Playwright not installed. Run: npm install && npm run install-browser'); process.exit(1)
   }
-  server.listen(config.filingPort, () => {
-    console.log(`\n🔐 Filing service on http://localhost:${config.filingPort}`)
+  const PORT = Number(process.env.PORT || config.filingPort)
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🔐 Filing service on http://0.0.0.0:${PORT}`)
     console.log(`   Portal: ${config.portalMode.toUpperCase()} → ${config.portalUrl}`)
     console.log(`   Browser: ${config.browserChannel || 'bundled chromium'} (${config.headless ? 'headless' : 'headed'})`)
     console.log(`   Customer solves the CAPTCHA in real time. Ctrl+C to stop.\n`)

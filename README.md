@@ -147,6 +147,13 @@ CAPTCHA relayed → wrong code retries → correct code → confirmation synced 
 order. Works on real portals that use a simple image CAPTCHA; reCAPTCHA/behavioral
 portals need the customer's-own-browser variant.
 
+> **Hosting note (important).** The filing service needs a **real browser**, so it
+> **cannot run on Vercel** — deploy it as a small container elsewhere (Railway,
+> Render, Fly, a VPS) and set `FILING_SERVICE_URL` on Vercel to its URL. Until you
+> do, the live site shows the "our team will file it" fallback (which is why no
+> CAPTCHA appears on a fresh Vercel deploy). Step-by-step: [`worker/DEPLOY.md`](worker/DEPLOY.md).
+> A `Dockerfile` with Chromium baked in is included.
+
 ## ▲ Deploy to Vercel
 
 1. Push this repo to GitHub (below).
