@@ -9,6 +9,33 @@
 > not final. Field labels, option lists, value codes, and the no‑login/no‑CAPTCHA
 > findings below are high‑confidence (read straight from the bundle).
 
+## ✅ LIVE RECON RESULTS (verified against the running portal this session)
+
+These supersede the static notes below where they differ — captured by actually
+driving `s.nia.gov.cn/ArrivalCardFillingPC/` with Playwright (read-only, no submit):
+
+- **Reachable & drivable** from automation (HTTP 200).
+- **Framework: Vue + Element UI.** Controls are `.el-select`, `.el-input__inner`,
+  `.el-upload__input` (`input[type=file][name=file]`), `.el-button--primary`, options in
+  `.el-select-dropdown__item`. **There are almost no `id`/`name` attributes** — the worker
+  must target each field by its **label**, then the adjacent Element-UI control, and pick
+  dropdown values by clicking `.el-select-dropdown__item`.
+- **Real navigation:** landing → click **"Entry Declaration"** (standard card; the orange
+  "…for Border Area Residents" card is a separate path for DPRK/Mongolia/Pakistan/Nepal/
+  Myanmar/Laos/Vietnam) → **notice** (`/entry-registation-notice`, lists the exempt
+  categories) → **"I AGREE"** → **5-step wizard** (`/entry-registation-form`):
+  **1** Uploading ID Document Page · **2** Basic Information · **3** Personal Information ·
+  **4** Travel Information · **5** Accompanying Person(s) → then declaration/**signature**/submit.
+- **Step 1 controls:** "Type of ID Document" `.el-select`; "Upload ID Document Page"
+  `input[type=file][name=file].el-upload__input`; **Next** `.el-button--primary`.
+- **Gotcha:** the top-right **Language** switcher is *also* an `.el-select` — never target
+  "the first select"; anchor on the form label.
+- **Automation implication:** official mode needs an **Element-UI driver + per-step "Next"
+  navigation + OCR upload + signature canvas**, which is materially different from the
+  single-page mock. This is why a mock is used for the demo. NEVER auto-submit fabricated data.
+
+---
+
 - **Product:** China Digital Arrival Card (CDAC), launched 20 Nov 2025 by the NIA.
 - **URLs:** desktop `https://s.nia.gov.cn/ArrivalCardFillingPC/` · mobile `https://s.nia.gov.cn/ArrivalCardFillingPhone`. Automate the **PC** URL.
 - **72‑hour rule:** the card can only be filed within **72 h (3 days) before arrival**. The date-of-entry picker disables dates before "yesterday"; submitting outside the window is rejected. Our scheduler must hold orders until `arrival − 72h` (Asia/Shanghai).
