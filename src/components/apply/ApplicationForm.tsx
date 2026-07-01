@@ -341,6 +341,7 @@ function ReviewCard({
   const UPPER = new Set(['surname', 'givenNames', 'otherName', 'passportNumber', 'carrierNumber', 'visaNumber', 'departureCarrierNumber'])
   const fmt = (f: { id: string; label: string; type: string }) => {
     const v = values[f.id]
+    if (f.type === 'file') return typeof v === 'string' && v.startsWith('data:') ? 'Uploaded ✓' : '—'
     if (Array.isArray(v)) return v.length ? v.join(', ') : '—'
     if (!v) return '—'
     return UPPER.has(f.id) ? String(v).toUpperCase() : String(v)

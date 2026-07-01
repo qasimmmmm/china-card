@@ -140,47 +140,61 @@ export function Field({ field }: { field: FieldDef }) {
     )
   }
 
-  // ── File upload ────────────────────────────────────────────
+  // ── File upload (passport photo → data-URL for the portal's OCR) ───────────
   if (field.type === 'file') {
     const fileName = (watch('passportFileName') as string) || ''
+    const dataUrl = (watch(field.id) as string) || ''
     const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if (!file) return
       if (file.size > MAX_FILE_MB * 1024 * 1024) {
         setValue('passportFileName', `__too_large__${file.name}`)
+        setValue(field.id, '', { shouldValidate: true })
         return
       }
-      setValue('passportFileName', file.name, { shouldDirty: true })
-      setValue(field.id, file.name, { shouldDirty: true })
+      // Read the real image bytes — the official NIA portal reads this photo
+      // through its OCR before it will open the form, so we must send the image
+      // itself, not just the file name.
+      const reader = new FileReader()
+      reader.onload = () => {
+        setValue(field.id, String(reader.result), { shouldDirty: true, shouldValidate: true })
+        setValue('passportFileName', file.name, { shouldDirty: true })
+      }
+      reader.readAsDataURL(file)
     }
     const tooLarge = fileName.startsWith('__too_large__')
     const display = tooLarge ? fileName.replace('__too_large__', '') : fileName
+    const hasImage = !!dataUrl && dataUrl.startsWith('data:image')
     return (
       <div>
         <Label />
-        {!display || tooLarge ? (
+        {!hasImage ? (
           <label
             htmlFor={field.id}
             className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-line bg-surface-soft px-4 py-6 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/40"
           >
             <Upload  className="h-6 w-6 text-brand-600" aria-hidden="true" />
-            <span className="mt-2 text-sm font-semibold text-navy">Click to upload your passport page</span>
-            <span className="mt-0.5 text-xs text-ink-muted">JPG, PNG or PDF · up to {MAX_FILE_MB} MB</span>
-            <input id={field.id} type="file" accept="image/*,application/pdf" className="sr-only" onChange={onChange} />
+            <span className="mt-2 text-sm font-semibold text-navy">Click to upload your passport data page</span>
+            <span className="mt-0.5 text-xs text-ink-muted">Clear photo · JPG or PNG · up to {MAX_FILE_MB} MB</span>
+            <input id={field.id} type="file" accept="image/jpeg,image/png" className="sr-only" onChange={onChange} />
           </label>
         ) : (
-          <div className="flex items-center justify-between rounded-xl border border-line bg-white px-4 py-3">
-            <span className="flex items-center gap-2 text-sm text-ink">
-              <FileText  className="h-4.5 w-4.5 text-brand-600" aria-hidden="true" />
-              {display}
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3">
+            <span className="flex min-w-0 items-center gap-3 text-sm text-ink">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={dataUrl} alt="Passport preview" className="h-12 w-16 shrink-0 rounded-md border border-line object-cover" />
+              <span className="flex items-center gap-1.5 truncate">
+                <FileText  className="h-4.5 w-4.5 shrink-0 text-brand-600" aria-hidden="true" />
+                <span className="truncate">{display || 'Passport photo'}</span>
+              </span>
             </span>
             <button
               type="button"
               onClick={() => {
                 setValue('passportFileName', '')
-                setValue(field.id, '')
+                setValue(field.id, '', { shouldValidate: true })
               }}
-              className="text-ink-muted hover:text-accent"
+              className="shrink-0 text-ink-muted hover:text-accent"
               aria-label="Remove file"
             >
               <X  className="h-4 w-4" aria-hidden="true" />

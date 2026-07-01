@@ -130,7 +130,7 @@ export const steps: StepDef[] = [
     subtitle: 'Enter your details exactly as they appear in your passport.',
     icon: 'book',
     fields: [
-      { id: 'passportFile', label: 'Passport data-page photo', type: 'file', required: false, hint: 'Optional but recommended — the official portal reads your passport photo to pre-fill these fields (JPG/PNG/PDF, max 8 MB).' },
+      { id: 'passportImage', label: 'Passport data-page photo', type: 'file', required: true, hint: 'Required — the official NIA portal opens only after your passport photo is read by its scanner. Upload a clear photo of the main data page (JPG or PNG, max 8 MB).' },
       { id: 'docType', label: 'Type of ID document', type: 'select', required: true, options: DOC_TYPES, half: true },
       { id: 'passportNumber', label: 'Passport / document number', type: 'text', required: true, placeholder: 'e.g. E12345678', half: true, max: 24 },
       { id: 'surname', label: 'Last name (surname)', type: 'text', required: true, placeholder: 'As shown in passport', half: true, max: 60 },

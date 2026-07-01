@@ -240,21 +240,44 @@ export async function driveWizard(page, order, opts = {}) {
   const filled = steps.filter((s) => s.ok && !s.skipped).length
   const missed = steps.filter((s) => !s.ok).map((s) => `${s.label} (${s.reason})`)
 
-  // FINAL SUBMIT — only with explicit consent-backed authorization.
+  // FINAL SUBMIT — only with explicit consent-backed authorization. On the real
+  // portal this is the customer's legal attestation; nothing submits without it.
   let confirmation = null
   let receiptImage = null
   if (opts.submit) {
-    const submitBtn = page.locator('button:has-text("Submit"), .el-button:has-text("Submit")').first()
-    await submitBtn.click({ timeout: T }).catch(() => {})
-    try {
-      await page.waitForSelector('#confirmationCode', { timeout: 12000 })
-      confirmation = (await page.locator('#confirmationCode').first().textContent())?.trim() || null
-      const buf = await page.locator('#confirmation').first().screenshot().catch(() => null)
-      if (buf) receiptImage = `data:image/png;base64,${buf.toString('base64')}`
-    } catch { /* no confirmation (real portal WAF / different layout) */ }
+    const r = await submitWizard(page)
+    confirmation = r.confirmation
+    receiptImage = r.receiptImage
   }
 
   return { steps, filled, total: steps.length, missed, confirmation, receiptImage, submitted: !!opts.submit }
+}
+
+/**
+ * Click the final Submit and read back the official confirmation + receipt.
+ * Split out so the pipeline can do a human/customer review BEFORE this
+ * irreversible step (fill on /start, submit on /confirm).
+ */
+export async function submitWizard(page, opts = {}) {
+  const confirmationSelector = opts.confirmationSelector || '#confirmationCode'
+  const receiptSelector = opts.receiptSelector || '#confirmation'
+  const submitBtn = page.locator('button:has-text("Submit"), .el-button:has-text("Submit"), .el-button--primary:has-text("提交")').first()
+  await submitBtn.click({ timeout: T }).catch(() => {})
+  let confirmation = null
+  let receiptImage = null
+  try {
+    await page.waitForSelector(confirmationSelector, { timeout: 15000 })
+    confirmation = (await page.locator(confirmationSelector).first().textContent())?.trim() || null
+    const buf = await page.locator(receiptSelector).first().screenshot().catch(() => null)
+    if (buf) receiptImage = `data:image/png;base64,${buf.toString('base64')}`
+  } catch { /* no confirmation (real portal WAF / different layout / needs manual finish) */ }
+  return { confirmation, receiptImage }
+}
+
+/** Screenshot the whole page (a review image of the filled form). */
+export async function pageShot(page) {
+  const buf = await page.screenshot({ fullPage: true }).catch(() => page.screenshot())
+  return `data:image/png;base64,${buf.toString('base64')}`
 }
 
 function msg(e) { return String(e?.message || e).replace(/\s+/g, ' ').slice(0, 90) }

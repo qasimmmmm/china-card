@@ -46,6 +46,9 @@ export const applicationSchema = z
       if (!isVisible(f, v)) continue
       const val = v[f.id]
 
+      // The passport photo has its own check below (must be a real image).
+      if (f.type === 'file') continue
+
       // Required checks (respecting visibility)
       if (f.required) {
         if (f.type === 'checkboxes') {
@@ -75,6 +78,12 @@ export const applicationSchema = z
     // Date sanity
     if (typeof v.dob === 'string' && isValidDate(v.dob) && Date.parse(v.dob) > Date.now()) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dob'], message: 'Date of birth cannot be in the future.' })
+    }
+
+    // Passport photo — the official NIA portal's first step is a mandatory OCR
+    // scan of the passport data page; the form will not open without it.
+    if (typeof v.passportImage !== 'string' || !v.passportImage.startsWith('data:image')) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['passportImage'], message: 'Please upload a clear photo of your passport data page — the official portal requires it to open your Arrival Card.' })
     }
 
     // Final-step: signature + consents + authorization to submit on their behalf

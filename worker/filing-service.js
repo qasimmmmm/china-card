@@ -13,13 +13,25 @@
  * The Next app talks to this over HTTP (FILING_SERVICE_URL); browsers never do.
  */
 import http from 'node:http'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { config } from './config.js'
-import { mapApplication } from './mapping.js'
-import { fillAll, tickDeclaration } from './fill.js'
+import { driveWizard, submitWizard, pageShot } from './official-driver.js'
 
 let chromium
-const sessions = new Map() // sessionId -> { browser, context, page, reference, createdAt }
+const sessions = new Map() // sessionId -> { browser, context, page, reference, createdAt, tempFiles }
+
+/** Write a passport-image data-URL to a temp file so the portal's <input type=file> can take it. */
+function writeDataUrlToTemp(dataUrl, ref) {
+  const m = /^data:(image\/[\w.+-]+);base64,(.+)$/s.exec(String(dataUrl || ''))
+  if (!m) return null
+  const ext = m[1].split('/')[1].replace('jpeg', 'jpg').replace(/[^a-z0-9]/gi, '') || 'jpg'
+  const file = path.join(os.tmpdir(), `passport-${String(ref || 'x').replace(/[^\w-]/g, '')}-${Date.now()}.${ext}`)
+  fs.writeFileSync(file, Buffer.from(m[2], 'base64'))
+  return file
+}
 
 function json(res, status, body) {
   const data = JSON.stringify(body)
@@ -42,115 +54,57 @@ async function launchBrowser() {
   return chromium.launch(opts)
 }
 
-async function elementShot(page, selector, timeout = 8000) {
-  const loc = page.locator(selector).first()
-  await loc.waitFor({ state: 'visible', timeout })
-  const buf = await loc.screenshot()
-  return `data:image/png;base64,${buf.toString('base64')}`
-}
-
-async function pageShot(page) {
-  const buf = await page.screenshot({ fullPage: true }).catch(() => page.screenshot())
-  return `data:image/png;base64,${buf.toString('base64')}`
-}
-
-async function hasElement(page, selector) {
-  try { return (await page.locator(selector).count()) > 0 } catch { return false }
-}
-
-async function clickSubmit(page) {
-  for (const hint of config.submitHints) {
-    const byRole = page.getByRole('button', { name: new RegExp(hint.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }).first()
-    if (await byRole.count().catch(() => 0)) { await byRole.click({ timeout: 4000 }).catch(() => {}); return true }
-    const byText = page.locator(`button:has-text("${hint.replace(/"/g, '\\"')}")`).first()
-    if (await byText.count().catch(() => 0)) { await byText.click({ timeout: 4000 }).catch(() => {}); return true }
-  }
-  return false
-}
-
-async function readConfirmation(page) {
-  try {
-    const t = (await page.locator(config.confirmationSelector).first().textContent({ timeout: 800 }))?.trim()
-    return t && t !== '—' ? t : null
-  } catch { return null }
-}
-
-async function captchaError(page) {
-  try {
-    const el = page.locator(config.captchaErrorSelector).first()
-    if (!(await el.count())) return false
-    return await el.isVisible()
-  } catch { return false }
-}
-
 // ── Handlers ──────────────────────────────────────────────
-// /start: open the portal, fill every field, and return a screenshot of the
-// FILLED official form so the customer can review it. Includes a CAPTCHA image
-// only if the portal actually shows one.
+// /start: open the portal and drive the whole 5-step Element-UI wizard from the
+// customer's confirmed data (upload passport → basic → personal → travel →
+// declaration + signature), STOPPING before the final Submit. Returns a
+// screenshot of the completed form for a final review before submitting.
 async function handleStart(body) {
   if (!body.reference || !body.application) throw new Error('reference and application are required')
+  const app = body.application
+  const tempFiles = []
+  const passportImagePath = writeDataUrlToTemp(app.passportImage, body.reference)
+  if (passportImagePath) tempFiles.push(passportImagePath)
+
   const browser = await launchBrowser()
   const context = await browser.newContext({ locale: 'en-US' })
   const page = await context.newPage()
-  await page.goto(config.portalUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
+  await page.goto(config.portalUrl, { waitUntil: 'networkidle', timeout: 60000 })
 
-  const results = await fillAll(page, mapApplication({ application: body.application, reference: body.reference }))
-  const filled = results.filter((r) => r.ok).length
-  const missed = results.filter((r) => !r.ok).map((r) => r.key)
+  // Fill everything and stop before Submit (the customer's final consent step).
+  const res = await driveWizard(page, { application: app, reference: body.reference, passportImagePath }, { submit: false })
 
   const formPreview = await pageShot(page)
   const sessionId = randomUUID()
-  sessions.set(sessionId, { browser, context, page, reference: body.reference, createdAt: Date.now() })
+  sessions.set(sessionId, { browser, context, page, reference: body.reference, createdAt: Date.now(), tempFiles })
 
-  const out = { ok: true, sessionId, filled, total: results.length, missed, formPreview }
-  if (await hasElement(page, config.captchaImageSelector)) {
-    out.captcha = { image: await elementShot(page, config.captchaImageSelector), prompt: 'Enter the verification code shown on the official form.' }
-    if (config.testReveal) out.debugAnswer = await page.locator(config.captchaImageSelector).getAttribute('data-code').catch(() => null)
-  }
-  return out
+  return { ok: true, sessionId, filled: res.filled, total: res.total, missed: res.missed, formPreview }
 }
 
 async function endSession(sessionId) {
   const s = sessions.get(sessionId)
   if (!s) return
   sessions.delete(sessionId)
+  for (const f of s.tempFiles || []) fs.rm(f, { force: true }, () => {})
   await s.browser.close().catch(() => {})
 }
 
-// /confirm: the customer has reviewed and given consent. Enter any CAPTCHA
-// answer, tick the declaration, submit to the authorities, then capture the
-// official receipt (QR) to deliver back. This final step IS the customer's
-// legal attestation — nothing is submitted without it.
+// /confirm: the customer has reviewed and given consent. Click the final Submit,
+// then capture the official receipt (QR) to deliver back. This final step IS the
+// customer's legal attestation — nothing is submitted without it.
 async function handleConfirm(body) {
   const s = sessions.get(body.sessionId)
   if (!s) throw new Error('session not found or expired')
   const { page } = s
-  const answer = String(body.answer || '').trim()
 
-  if (answer && (await hasElement(page, config.captchaInputSelector))) {
-    await page.locator(config.captchaInputSelector).first().fill(answer).catch(() => {})
-  }
-  await tickDeclaration(page)
-  await clickSubmit(page)
+  const { confirmation, receiptImage } = await submitWizard(page, {
+    confirmationSelector: config.confirmationSelector,
+    receiptSelector: config.receiptSelector,
+  })
 
-  // Wait for a confirmation number or a CAPTCHA error.
-  const deadline = Date.now() + 12000
-  while (Date.now() < deadline) {
-    const conf = await readConfirmation(page)
-    if (conf) {
-      // Capture the official receipt/QR to deliver to the customer.
-      let receiptImage = null
-      try { receiptImage = await elementShot(page, config.receiptSelector, 4000) } catch { receiptImage = await pageShot(page) }
-      await endSession(body.sessionId)
-      return { ok: true, status: 'completed', confirmation: conf, receiptImage, portal: config.portalMode }
-    }
-    if (await captchaError(page)) {
-      const image = await elementShot(page, config.captchaImageSelector)
-      const out = { ok: true, status: 'captcha', message: 'That verification code was incorrect — please try the new one.', captcha: { image } }
-      if (config.testReveal) out.debugAnswer = await page.locator(config.captchaImageSelector).getAttribute('data-code').catch(() => null)
-      return out
-    }
-    await page.waitForTimeout(300)
+  if (confirmation) {
+    await endSession(body.sessionId)
+    return { ok: true, status: 'completed', confirmation, receiptImage: receiptImage || (await pageShot(page)), portal: config.portalMode }
   }
   return { ok: false, status: 'pending', message: 'The portal did not confirm — a human may need to finish this submission.' }
 }
