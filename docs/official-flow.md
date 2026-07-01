@@ -34,6 +34,34 @@ driving `s.nia.gov.cn/ArrivalCardFillingPC/` with Playwright (read-only, no subm
   navigation + OCR upload + signature canvas**, which is materially different from the
   single-page mock. This is why a mock is used for the demo. NEVER auto-submit fabricated data.
 
+### 🔑 Decisive findings from the adaptive walk (this session)
+
+- **The wizard is `v-if` (lazy):** only the *current* step's `.el-form-item`s exist in the
+  DOM. You cannot read steps 2–5 without advancing — so full field-by-field live recon of
+  steps 2–5 requires passing step 1 (which needs a real passport image, see below).
+- **Step 1 upload is MANDATORY.** Selecting a doc type and clicking **Next** with no upload
+  yields the toast **"Please upload ID document page"** and does **not** advance. There is
+  **no "enter manually / skip" affordance.** → A **passport data-page image is required to
+  file at all.** Our `/apply` funnel must collect it (added: `passportImage`).
+- **OCR is a real signed call:** uploading fires
+  `POST https://app.nia.gov.cn/psbapi/ocr/doOcr/v1?appid=…&timestamp=…&nonce=…&signature=…`.
+  A junk/1×1 image is rejected (OCR finds nothing → cannot advance). The image must be a
+  legible passport data page. OCR pre-fills name/passport#/DOB/nationality/sex; **all stay
+  editable**, so the driver overwrites them with the customer's confirmed Review values.
+- **Doc-type option list (live-verified):** Diplomatic Passport, Service Passport, Passport
+  for Public Affairs, **Ordinary Passport**, Seaman's Book (codes 11/12/13/14/17).
+- **Element-UI interaction recipe (use in the driver):**
+  - text: `.el-form-item:has-text("<label>") input.el-input__inner` → `.fill(value)`
+  - select: click `.el-form-item:has-text("<label>") .el-select` → click
+    `.el-select-dropdown__item:visible:has-text("<option>")`
+  - radio: click `.el-form-item:has-text("<label>") .el-radio:has-text("<option>")`
+  - date: click the `.el-date-editor` input, `.fill('YYYY-MM-DD')`, press Enter
+  - upload: `.el-form-item:has-text("Upload") input[type=file]` → `.setInputFiles(path)`, then
+    wait for OCR to settle
+  - next: `button:has-text("Next")`; final submit gated by declaration consent + signature
+  - **anchor on the field label, never on element order** (the top-right Language switcher is
+    also an `.el-select`).
+
 ---
 
 - **Product:** China Digital Arrival Card (CDAC), launched 20 Nov 2025 by the NIA.

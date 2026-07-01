@@ -1,201 +1,366 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Arrival Card — Online Filing (DEMO MOCK)</title>
+  <title>Arrival Card Filling</title>
+  <!--
+    HIGH-FIDELITY practice clone of the real NIA CDAC portal
+    (s.nia.gov.cn/ArrivalCardFillingPC). It uses the SAME UI toolkit the real
+    site uses — Vue 2 + Element UI — so the DOM (.el-select, .el-form-item,
+    .el-form-item__label, .el-upload__input, .el-step, .el-radio, .el-date-editor)
+    is structurally identical. That lets worker/official-driver.js be built and
+    tested against this page and then point at the real portal unchanged.
+
+    This is a TEST TARGET ONLY. It issues a fake confirmation code so the pipeline
+    can be proven end-to-end without ever touching the government system.
+  -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css" />
+  <script src="https://unpkg.com/vue@2.7.16/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script>
   <style>
-    :root { --gov:#b9282e; --ink:#1f2937; --line:#d8dce3; --bg:#f3f5f8; }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color:var(--ink); background:var(--bg); }
-    .ribbon { background:#fde68a; color:#7c5b00; text-align:center; font-size:12px; padding:6px; font-weight:700; letter-spacing:.02em; }
-    header { background:linear-gradient(180deg,#a51f25,#8c1a20); color:#fff; padding:14px 0; }
-    .wrap { max-width:880px; margin:0 auto; padding:0 18px; }
-    .brand { display:flex; align-items:center; gap:12px; }
-    .seal { width:40px; height:40px; border-radius:50%; background:#fff3; border:2px solid #fff8; display:flex; align-items:center; justify-content:center; font-size:20px; }
-    .brand h1 { font-size:17px; margin:0; }
-    .brand p { margin:2px 0 0; font-size:12px; opacity:.85; }
-    main { padding:26px 0 60px; }
-    .card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:22px; }
-    h2 { font-size:15px; margin:22px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--gov); color:#7c1c20; }
-    h2:first-child { margin-top:4px; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 18px; }
-    .full { grid-column:1 / -1; }
-    label { display:block; font-size:12.5px; font-weight:600; margin-bottom:5px; }
-    input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px; font-size:14px; background:#fff; }
-    input:focus, select:focus, textarea:focus { outline:2px solid #b9282e44; border-color:#b9282e; }
-    .req::after { content:" *"; color:var(--gov); }
-    .actions { margin-top:24px; display:flex; gap:12px; align-items:center; }
-    button { background:var(--gov); color:#fff; border:0; padding:12px 22px; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; }
-    button:hover { background:#9a2026; }
-    .note { font-size:12px; color:#6b7280; }
-    /* confirmation */
-    #confirmation { display:none; text-align:center; padding:30px 10px; }
-    #confirmation .ok { width:64px;height:64px;border-radius:50%;background:#dcfce7;color:#15803d;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px; }
-    #confirmationCode { font-family:ui-monospace,Menlo,monospace; font-size:22px; font-weight:800; letter-spacing:1px; color:#111827; }
-    #qr { width:140px;height:140px;margin:16px auto 0;display:grid;grid-template-columns:repeat(11,1fr);gap:0;border:6px solid #fff;box-shadow:0 0 0 1px var(--line); }
-    #qr span{display:block;width:100%;padding-bottom:100%;}
+    body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f4f6fb; color: #1f2a44; }
+    .gov-header { background: #2f4bb6; color: #fff; padding: 18px 32px; display: flex; align-items: center; gap: 14px; }
+    .gov-header .emblem { width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #ffd24d, #e8b100); display: grid; place-items: center; color: #b00; font-weight: 700; }
+    .gov-header h1 { font-size: 19px; margin: 0; font-weight: 700; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px; }
+    .page-title { font-weight: 700; font-size: 17px; border-left: 4px solid #2f4bb6; padding-left: 10px; margin: 20px 0 8px; }
+    .cards { display: flex; gap: 28px; justify-content: center; margin-top: 40px; flex-wrap: wrap; }
+    .entry-card { width: 320px; height: 190px; border-radius: 14px; padding: 26px; cursor: pointer; box-shadow: 0 6px 18px rgba(30,50,120,.08); transition: transform .15s; }
+    .entry-card:hover { transform: translateY(-3px); }
+    .entry-card.std { background: linear-gradient(135deg, #eaf1ff, #cfe0ff); color: #2f4bb6; }
+    .entry-card.border { background: linear-gradient(135deg, #fff4e0, #ffe6bd); color: #b9760f; }
+    .entry-card .t { font-size: 20px; font-weight: 700; }
+    .entry-card .d { font-size: 13px; margin-top: 10px; line-height: 1.5; }
+    .notice-box { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 6px 18px rgba(30,50,120,.06); }
+    .notice-box h2 { margin-top: 0; }
+    .notice-box ul { line-height: 1.7; color: #47506b; }
+    .form-card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 6px 18px rgba(30,50,120,.06); margin-top: 18px; }
+    .step-actions { margin-top: 26px; display: flex; justify-content: space-between; }
+    .ocr-note { font-size: 12.5px; color: #6b7392; margin-top: 6px; }
+    .sig-wrap { border: 1px dashed #b9c2dd; border-radius: 8px; width: 420px; max-width: 100%; }
+    .sig-wrap canvas { display: block; width: 100%; height: 130px; touch-action: none; border-radius: 8px; background: #fbfcff; }
+    .decl { background: #f7f9ff; border: 1px solid #e3e9f8; border-radius: 10px; padding: 18px; margin-top: 20px; }
+    .receipt { background: #fff; border-radius: 14px; padding: 34px; box-shadow: 0 8px 26px rgba(30,50,120,.10); text-align: center; max-width: 460px; margin: 30px auto; }
+    .receipt h2 { color: #1f9d55; margin-top: 6px; }
+    .receipt .code { font-size: 22px; font-weight: 700; letter-spacing: 1px; margin: 12px 0; }
+    .receipt canvas { margin: 12px auto; border: 8px solid #fff; box-shadow: 0 0 0 1px #e3e9f8; }
+    .muted { color: #6b7392; font-size: 13px; }
   </style>
 </head>
 <body>
-  <div class="ribbon">⚠ DEMO / MOCK PORTAL — a local stand-in for the official NIA Arrival Card form, used to test the automation. This is NOT a real government website.</div>
-  <header>
-    <div class="wrap brand">
-      <div class="seal">🛂</div>
-      <div>
-        <h1>National Immigration Administration — Arrival Card</h1>
-        <p>Online filing for foreign nationals · 外国人入境卡</p>
+<div id="app">
+  <div class="gov-header">
+    <div class="emblem">★</div>
+    <h1>National Immigration Administration Government Service Platform</h1>
+  </div>
+
+  <div class="wrap">
+    <div class="page-title">Arrival Card Filling</div>
+
+    <!-- LANDING -->
+    <div v-if="view==='landing'" class="cards">
+      <div class="entry-card std" @click="chooseEntry">
+        <div class="t">Entry Declaration</div>
+        <div class="d">For foreign nationals entering mainland China. Fill in your arrival card here.</div>
+      </div>
+      <div class="entry-card border">
+        <div class="t">Entry Declaration for Border Area Residents</div>
+        <div class="d">Citizens holding border resident certificates from seven countries (DPRK, Mongolia, Pakistan, Nepal, Myanmar, Laos, Vietnam).</div>
       </div>
     </div>
-  </header>
 
-  <main class="wrap">
-    <form id="arrivalForm" class="card" autocomplete="off" novalidate>
-      <h2>Personal information</h2>
-      <div class="grid">
-        <div><label for="surname" class="req">Surname / Family name</label><input id="surname" name="surname" /></div>
-        <div><label for="given" class="req">Given name(s)</label><input id="given" name="given" /></div>
-        <div><label for="sex" class="req">Sex</label>
-          <select id="sex"><option value=""></option><option>Male</option><option>Female</option></select></div>
-        <div><label for="dob" class="req">Date of birth</label><input id="dob" type="date" /></div>
-        <div><label for="nationality" class="req">Nationality</label>
-          <select id="nationality"><option value=""></option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>Australia</option><option>Germany</option><option>France</option><option>Japan</option><option>Singapore</option><option>India</option><option>Other</option></select></div>
-        <div><label for="cob">Country of birth</label>
-          <select id="cob"><option value=""></option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>Australia</option><option>Germany</option><option>France</option><option>Other</option></select></div>
-        <div><label for="cityOfBirth">City of birth</label><input id="cityOfBirth" /></div>
-      </div>
+    <!-- NOTICE -->
+    <div v-else-if="view==='notice'" class="notice-box">
+      <h2>Notice for Filling in the Arrival Card</h2>
+      <p>Please read the following before you begin. The card must be filed within 72 hours before your arrival in China.</p>
+      <ul>
+        <li>The following are exempt and generally do not need to file: holders of a PRC Foreign Permanent Resident ID Card; group visa / group visa-free tour members; direct transit under 24 hours staying airside; same-cruise round trips; e-channel / fast-lane users; cross-border transport crew.</li>
+        <li>Provide truthful information exactly as shown on your passport.</li>
+      </ul>
+      <el-button type="primary" round @click="agreeNotice">I AGREE</el-button>
+    </div>
 
-      <h2>Travel document</h2>
-      <div class="grid">
-        <div><label for="docType" class="req">Document type</label>
-          <select id="docType"><option value=""></option><option>Ordinary Passport</option><option>Diplomatic Passport</option><option>Service / Official Passport</option><option>Travel Document</option></select></div>
-        <div><label for="passportNo" class="req">Passport / document number</label><input id="passportNo" /></div>
-        <div><label for="expiry" class="req">Passport expiry date</label><input id="expiry" type="date" /></div>
-        <div><label for="issuer">Issuing country / authority</label>
-          <select id="issuer"><option value=""></option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>Australia</option><option>Other</option></select></div>
-        <div><label for="visaNo">Visa / permit number</label><input id="visaNo" /></div>
-      </div>
+    <!-- FORM -->
+    <div v-else-if="view==='form'" class="form-card">
+      <el-steps :active="active" finish-status="success" align-center>
+        <el-step title="Uploading ID Document Page"></el-step>
+        <el-step title="Basic Information Filling"></el-step>
+        <el-step title="Personal Information Filling"></el-step>
+        <el-step title="Travel Information Filling"></el-step>
+        <el-step title="Accompanying Person (s) Filling"></el-step>
+      </el-steps>
 
-      <h2>Trip & itinerary</h2>
-      <div class="grid">
-        <div><label for="transport" class="req">Transport mode</label>
-          <select id="transport"><option value=""></option><option>Flight</option><option>Train</option><option>Automobile</option><option>Vessel</option><option>On Foot</option><option>Automobile and On Foot</option></select></div>
-        <div><label for="carrier" class="req">Flight / train / vessel number</label><input id="carrier" /></div>
-        <div><label for="arrival" class="req">Arrival date</label><input id="arrival" type="date" /></div>
-        <div><label for="port" class="req">Port of entry</label><input id="port" /></div>
-        <div><label for="entryCity" class="req">City of entry</label>
-          <select id="entryCity"><option value=""></option><option>Beijing</option><option>Shanghai</option><option>Guangzhou</option><option>Shenzhen</option><option>Chengdu</option><option>Other</option></select></div>
-        <div><label for="purpose" class="req">Purpose of visit</label>
-          <select id="purpose"><option value=""></option><option>Conference/Business</option><option>Visit</option><option>Sightseeing/Leisure</option><option>Visiting Friends/Relatives</option><option>Work</option><option>Study</option><option>Permanent Residence</option><option>Return to Country of Residence</option><option>Service (Employee)</option><option>Other</option></select></div>
-        <div><label for="destCity">Destination city</label>
-          <select id="destCity"><option value=""></option><option>Beijing</option><option>Shanghai</option><option>Guangzhou</option><option>Shenzhen</option><option>Chengdu</option><option>Other</option></select></div>
-        <div><label for="inviter">Inviting party (if any)</label><input id="inviter" /></div>
-        <div class="full"><label for="addr" class="req">Accommodation address in China</label><textarea id="addr" rows="2"></textarea></div>
-      </div>
+      <el-form label-position="top" style="margin-top: 26px" :model="form">
+        <!-- STEP 1 -->
+        <div v-show="active===0">
+          <el-form-item label="Type of ID Document" required>
+            <el-select v-model="form.docType" placeholder="Select" style="width: 320px">
+              <el-option v-for="d in docTypes" :key="d" :label="d" :value="d"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Upload ID Document Page" required>
+            <el-upload action="#" :auto-upload="false" :show-file-list="true" :limit="1"
+                       accept="image/jpeg, image/png" :on-change="onUpload">
+              <el-button size="small" type="primary">Click to upload</el-button>
+            </el-upload>
+            <div class="ocr-note" v-if="ocrRunning">Recognising document…</div>
+            <div class="ocr-note" v-else-if="uploaded" style="color:#1f9d55">Document recognised. Fields pre-filled — please verify.</div>
+            <div class="ocr-note" v-else>Upload the passport data page (JPG/PNG). Required.</div>
+          </el-form-item>
+        </div>
 
-      <h2>Contact & departure</h2>
-      <div class="grid">
-        <div><label for="areaCode">Phone area code</label>
-          <select id="areaCode"><option value=""></option><option>+1 (United States / Canada)</option><option>+44 (United Kingdom)</option><option>+86 (China)</option><option>+61 (Australia)</option><option>+49 (Germany)</option><option>+81 (Japan)</option><option>+other</option></select></div>
-        <div><label for="phone" class="req">Phone number</label><input id="phone" /></div>
-        <div><label for="email">Email address</label><input id="email" /></div>
-        <div class="full"><label for="departure">Departure date & transport details</label><input id="departure" /></div>
-      </div>
+        <!-- STEP 2 -->
+        <div v-show="active===1">
+          <el-form-item label="Last Name" required>
+            <el-input v-model="form.lastName" style="width: 320px"></el-input>
+          </el-form-item>
+          <el-form-item label="First Name">
+            <el-input v-model="form.firstName" style="width: 320px"></el-input>
+          </el-form-item>
+          <el-form-item label="Gender" required>
+            <el-radio-group v-model="form.gender">
+              <el-radio label="Male">Male</el-radio>
+              <el-radio label="Female">Female</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="Date of Birth" required>
+            <el-date-picker v-model="form.dob" type="date" value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="Select date"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="Country/Region of Citizenship" required>
+            <el-select v-model="form.nationality" filterable placeholder="Select" style="width: 320px">
+              <el-option v-for="c in countries" :key="c" :label="c" :value="c"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Passport Number" required>
+            <el-input v-model="form.passportNumber" style="width: 320px"></el-input>
+          </el-form-item>
+        </div>
 
-      <label style="margin-top:18px;display:flex;gap:8px;align-items:flex-start;font-weight:500">
-        <input type="checkbox" id="truth" style="width:auto;margin-top:3px" />
-        <span>I declare the information provided is true and accurate.</span>
-      </label>
+        <!-- STEP 3 -->
+        <div v-show="active===2">
+          <el-form-item label="Other Name">
+            <el-input v-model="form.otherName" style="width: 320px"></el-input>
+          </el-form-item>
+          <el-form-item label="Chinese Name">
+            <el-input v-model="form.chineseName" style="width: 320px"></el-input>
+          </el-form-item>
+          <el-form-item label="Country/Region of Birth">
+            <el-select v-model="form.countryOfBirth" filterable placeholder="Select" style="width: 320px">
+              <el-option v-for="c in countries" :key="c" :label="c" :value="c"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="City of Birth">
+            <el-input v-model="form.cityOfBirth" style="width: 320px"></el-input>
+          </el-form-item>
+          <el-form-item label="Has this passport ever been lost or stolen?">
+            <el-radio-group v-model="form.lostStolen">
+              <el-radio label="Yes">Yes</el-radio>
+              <el-radio label="No">No</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </div>
 
-      <h2 style="margin-top:22px">Security verification</h2>
-      <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
-        <div>
-          <label>Verification code</label>
-          <div style="display:flex;align-items:center;gap:8px">
-            <canvas id="captcha-image" width="150" height="48" style="border:1px solid var(--line);border-radius:7px;background:#f8f4e8"></canvas>
-            <button type="button" id="captcha-refresh" title="New code" style="background:#eef;color:#333;padding:8px 12px;font-size:13px">↻</button>
+        <!-- STEP 4 -->
+        <div v-show="active===3">
+          <el-form-item label="Entry Transportation Mode" required>
+            <el-select v-model="form.transportMode" placeholder="Select" style="width: 320px">
+              <el-option v-for="t in transportModes" :key="t" :label="t" :value="t"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Arrival Flight/Train/Vessel Number" required>
+            <el-input v-model="form.carrierNumber" style="width: 320px"></el-input>
+          </el-form-item>
+          <el-form-item label="Date of Entry" required>
+            <el-date-picker v-model="form.entryDate" type="date" value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="Select date"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="City of Entry" required>
+            <el-select v-model="form.entryCity" placeholder="Select" style="width: 320px" @change="onCity">
+              <el-option v-for="c in entryCities" :key="c" :label="c" :value="c"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Port/Channel of Entry" required>
+            <el-select v-model="form.entryPort" placeholder="Select" style="width: 320px">
+              <el-option v-for="p in portList" :key="p" :label="p" :value="p"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Purpose of Entry" required>
+            <el-select v-model="form.purpose" placeholder="Select" style="width: 320px">
+              <el-option v-for="p in purposes" :key="p" :label="p" :value="p"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Destination Cities in China" required>
+            <el-select v-model="form.destinationCity" placeholder="Select" style="width: 320px">
+              <el-option v-for="c in entryCities" :key="c" :label="c" :value="c"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Address in China" required>
+            <el-input v-model="form.address" type="textarea" :rows="2" style="width: 420px"></el-input>
+          </el-form-item>
+          <el-form-item label="Been to other countries/regions in the past 2 years?" required>
+            <el-radio-group v-model="form.beenOther">
+              <el-radio label="Yes">Yes</el-radio>
+              <el-radio label="No">No</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="Hold a valid visa/permit?" required>
+            <el-radio-group v-model="form.hasVisa">
+              <el-radio label="Yes">Yes</el-radio>
+              <el-radio label="No">No</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="Visa Type" v-if="form.hasVisa==='Yes'">
+            <el-select v-model="form.visaType" placeholder="Select" style="width: 320px">
+              <el-option v-for="v in visaTypes" :key="v" :label="v" :value="v"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Visa Number" v-if="form.hasVisa==='Yes'">
+            <el-input v-model="form.visaNumber" style="width: 320px"></el-input>
+          </el-form-item>
+          <el-form-item label="Phone Area Code" required>
+            <el-select v-model="form.areaCode" filterable placeholder="Select" style="width: 320px">
+              <el-option v-for="a in areaCodes" :key="a" :label="a" :value="a"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Contact Number" required>
+            <el-input v-model="form.phone" style="width: 320px"></el-input>
+          </el-form-item>
+          <el-form-item label="Email">
+            <el-input v-model="form.email" style="width: 320px"></el-input>
+          </el-form-item>
+        </div>
+
+        <!-- STEP 5 -->
+        <div v-show="active===4">
+          <el-form-item label="Do you have accompanying person (s)?" required>
+            <el-radio-group v-model="form.accompanying">
+              <el-radio label="Yes">Yes</el-radio>
+              <el-radio label="No">No</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <div class="decl">
+            <p style="margin-top:0"><strong>Declaration.</strong> I hereby declare that the information provided above is true, accurate and complete. I understand that providing false information may result in denial of entry and legal liability.</p>
+            <el-checkbox v-model="agree">I have read and agree to the above statements</el-checkbox>
+            <div style="margin-top:14px">
+              <div class="muted" style="margin-bottom:6px">Signature</div>
+              <div class="sig-wrap">
+                <canvas ref="sig" width="420" height="130"></canvas>
+              </div>
+              <el-button size="mini" style="margin-top:8px" @click="clearSig">Clear</el-button>
+              <span class="muted" v-if="signed" style="margin-left:10px;color:#1f9d55">Signed ✓</span>
+            </div>
           </div>
         </div>
-        <div style="flex:1;min-width:180px">
-          <label for="captcha-input">Enter the code shown</label>
-          <input id="captcha-input" maxlength="6" autocomplete="off" style="text-transform:uppercase;letter-spacing:2px" />
+
+        <div class="step-actions">
+          <el-button v-if="active>0" @click="prev">Previous</el-button><span v-else></span>
+          <el-button v-if="active<4" type="primary" :disabled="active===0 && !uploaded" @click="next">Next</el-button>
+          <el-button v-else type="primary" @click="submit">Submit</el-button>
         </div>
-      </div>
-      <p id="captcha-error" class="note" style="color:#b9282e;margin-top:6px;display:none">Incorrect verification code. Please try again.</p>
-
-      <div class="actions">
-        <button type="button" id="submitBtn">Submit declaration</button>
-        <span class="note">A QR code will be generated for presentation at the border.</span>
-      </div>
-      <p id="formError" class="note" style="color:#b9282e;margin-top:10px"></p>
-    </form>
-
-    <div id="confirmation" class="card">
-      <div class="ok">✓</div>
-      <h2 style="border:0;color:#15803d;justify-self:center;display:inline-block">Arrival Card submitted successfully</h2>
-      <p class="note">Present this confirmation and QR code to the immigration officer on arrival.</p>
-      <p style="margin:14px 0 2px">Confirmation number</p>
-      <div id="confirmationCode">—</div>
-      <div id="qr"></div>
+      </el-form>
     </div>
-  </main>
 
-  <script>
-    (function () {
-      var form = document.getElementById('arrivalForm');
-      var conf = document.getElementById('confirmation');
-      var btn = document.getElementById('submitBtn');
-      var cImg = document.getElementById('captcha-image');
-      var cErr = document.getElementById('captcha-error');
-      var captchaCode = '';
-      function rand(n){ var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s=''; for(var i=0;i<n;i++) s+=a[Math.floor(Math.random()*a.length)]; return s; }
+    <!-- RECEIPT -->
+    <div v-else-if="view==='receipt'" id="confirmation" class="receipt">
+      <h2>✓ Arrival Card Submitted</h2>
+      <p class="muted">Entry Declaration Receipt</p>
+      <div class="code" id="confirmationCode">{{ confirmationCode }}</div>
+      <canvas ref="qr" width="180" height="180"></canvas>
+      <p class="muted">Present this QR code at the border. Keep a copy of your receipt.</p>
+      <el-button type="primary" round @click="download">Download to Local</el-button>
+    </div>
+  </div>
+</div>
 
-      // Draw a noisy 5-char image CAPTCHA (like many government portals use).
-      function drawCaptcha(){
-        captchaCode = rand(5);
-        cImg.setAttribute('data-code', captchaCode); // TEST-ONLY affordance
-        var ctx = cImg.getContext('2d');
-        ctx.clearRect(0,0,150,48); ctx.fillStyle='#f8f4e8'; ctx.fillRect(0,0,150,48);
-        for (var i=0;i<6;i++){ ctx.strokeStyle='rgba('+((i*40)%200)+','+((i*70)%200)+','+((i*90)%200)+',0.5)'; ctx.beginPath(); ctx.moveTo(Math.random()*150,Math.random()*48); ctx.lineTo(Math.random()*150,Math.random()*48); ctx.stroke(); }
-        for (var k=0;k<captchaCode.length;k++){
-          ctx.save();
-          ctx.font = (22+Math.floor(Math.random()*6))+'px Georgia';
-          ctx.fillStyle = 'hsl('+(Math.random()*360)+',60%,30%)';
-          ctx.translate(16+k*26, 34);
-          ctx.rotate((Math.random()-0.5)*0.5);
-          ctx.fillText(captchaCode[k], 0, 0);
-          ctx.restore();
-        }
-      }
-      drawCaptcha();
-      document.getElementById('captcha-refresh').addEventListener('click', function(e){ e.preventDefault(); drawCaptcha(); cErr.style.display='none'; document.getElementById('captcha-input').value=''; });
-
-      btn.addEventListener('click', function () {
-        var required = ['surname','given','passportNo','arrival','port','addr'];
-        var missing = required.filter(function(id){ return !document.getElementById(id).value.trim(); });
-        var err = document.getElementById('formError');
-        if (!document.getElementById('truth').checked) missing.push('declaration');
-        if (missing.length) { err.textContent = 'Please complete required fields: ' + missing.join(', '); return; }
-        err.textContent = '';
-
-        var answer = (document.getElementById('captcha-input').value || '').trim().toUpperCase();
-        if (answer !== captchaCode) {
-          drawCaptcha();
-          cErr.style.display = 'block';
-          document.getElementById('captcha-input').value = '';
-          return;
-        }
-        cErr.style.display='none';
-
-        var code = 'CN-AC-' + rand(4) + '-' + rand(4);
-        document.getElementById('confirmationCode').textContent = code;
-        var qr = document.getElementById('qr'); qr.innerHTML='';
-        var seed = 0; for (var i=0;i<code.length;i++) seed += code.charCodeAt(i)*(i+7);
-        for (var j=0;j<121;j++){ seed = (seed*1103515245+12345) & 0x7fffffff; var on = ((seed>>8)%100)<48; var c=document.createElement('span'); c.style.background = on ? '#111827':'#fff'; qr.appendChild(c); }
-        form.style.display='none'; conf.style.display='block';
-        conf.setAttribute('data-confirmed','true');
-      });
-    })();
-  </script>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    view: 'landing',
+    active: 0,
+    uploaded: false,
+    ocrRunning: false,
+    agree: false,
+    signed: false,
+    confirmationCode: '',
+    form: {
+      docType: '', lastName: '', firstName: '', gender: '', dob: '', nationality: '', passportNumber: '',
+      otherName: '', chineseName: '', countryOfBirth: '', cityOfBirth: '', lostStolen: '',
+      transportMode: '', carrierNumber: '', entryDate: '', entryCity: '', entryPort: '', purpose: '',
+      destinationCity: '', address: '', beenOther: '', hasVisa: '', visaType: '', visaNumber: '',
+      areaCode: '', phone: '', email: '', accompanying: 'No',
+    },
+    docTypes: ['Diplomatic Passport', 'Service Passport', 'Passport for Public Affairs', 'Ordinary Passport', "Seaman's Book"],
+    countries: ['Australia', 'Canada', 'France', 'Germany', 'India', 'Italy', 'Japan', 'Netherlands', 'Pakistan', 'Singapore', 'South Korea', 'Spain', 'United Arab Emirates', 'United Kingdom', 'United States'],
+    transportModes: ['Vessel', 'Flight', 'Train', 'Automobile', 'On Foot', 'Automobile and On Foot'],
+    purposes: ['Conference/Business', 'Visit', 'Sightseeing/Leisure', 'Visiting Friends/Relatives', 'Work', 'Study', 'Permanent Residence', 'Return to Country of Residence', 'Service (Employee)', 'Other'],
+    entryCities: ['Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen', 'Chengdu', 'Hangzhou', 'Xiamen'],
+    portsByCity: {
+      Beijing: ['Beijing Capital International Airport (PEK)', 'Beijing Daxing International Airport (PKX)'],
+      Shanghai: ['Shanghai Pudong International Airport (PVG)', 'Shanghai Hongqiao International Airport (SHA)'],
+      Guangzhou: ['Guangzhou Baiyun International Airport (CAN)'],
+      Shenzhen: ["Shenzhen Bao'an International Airport (SZX)", 'Shenzhen Bay Port (land)'],
+      Chengdu: ['Chengdu Tianfu International Airport (TFU)', 'Chengdu Shuangliu International Airport (CTU)'],
+      Hangzhou: ['Hangzhou Xiaoshan International Airport (HGH)'],
+      Xiamen: ['Xiamen Gaoqi International Airport (XMN)'],
+    },
+    portList: [],
+    visaTypes: ['Tourism (L)', 'Business (M)', 'Work (Z)', 'Study (X1/X2)', 'Family reunion / private (S1/S2)', 'Transit (G)', 'Other / Residence permit'],
+    areaCodes: ['+1', '+44', '+49', '+33', '+34', '+39', '+61', '+65', '+81', '+82', '+86', '+91', '+92', '+971'],
+    drawing: false,
+  },
+  methods: {
+    chooseEntry() { this.view = 'notice' },
+    agreeNotice() { this.view = 'form'; this.active = 0 },
+    onUpload() {
+      // Simulate the portal's OCR pass: after upload the basic fields become
+      // available (blank here — the driver overwrites with confirmed values).
+      this.ocrRunning = true
+      setTimeout(() => { this.ocrRunning = false; this.uploaded = true }, 700)
+    },
+    onCity(city) { this.portList = this.portsByCity[city] || []; this.form.entryPort = '' },
+    next() {
+      if (this.active === 0 && !this.uploaded) { this.$message.error('Please upload ID document page'); return }
+      if (this.active < 4) { this.active++; if (this.active === 4) this.$nextTick(this.bindSig) }
+    },
+    prev() { if (this.active > 0) this.active-- },
+    bindSig() {
+      var c = this.$refs.sig; if (!c || c._bound) return; c._bound = true
+      var ctx = c.getContext('2d'); ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.strokeStyle = '#1f2a44'
+      var self = this, last = null
+      var pos = function (e) { var r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) * (c.width / r.width), y: (e.clientY - r.top) * (c.height / r.height) } }
+      c.addEventListener('pointerdown', function (e) { self.drawing = true; last = pos(e); try { c.setPointerCapture(e.pointerId) } catch (x) {} })
+      c.addEventListener('pointermove', function (e) { if (!self.drawing) return; var p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; self.signed = true })
+      window.addEventListener('pointerup', function () { self.drawing = false })
+    },
+    clearSig() { var c = this.$refs.sig; if (c) { c.getContext('2d').clearRect(0, 0, c.width, c.height); this.signed = false } },
+    submit() {
+      if (!this.agree) { this.$message.error('Please read and agree to the declaration'); return }
+      if (!this.signed) { this.$message.error('Please provide your signature'); return }
+      var n = 'CN' + Date.now().toString().slice(-10)
+      this.confirmationCode = n
+      this.view = 'receipt'
+      this.$nextTick(this.renderQR)
+    },
+    renderQR() {
+      // Deterministic pseudo-QR from the code (no external lib needed).
+      var c = this.$refs.qr; if (!c) return; var ctx = c.getContext('2d')
+      var s = this.confirmationCode, N = 21, cell = c.width / N
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height)
+      ctx.fillStyle = '#111'
+      var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+      function rnd() { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296 }
+      for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) if (rnd() > 0.5) ctx.fillRect(x * cell, y * cell, cell, cell)
+      function finder(fx, fy) { ctx.fillStyle = '#fff'; ctx.fillRect(fx * cell, fy * cell, 7 * cell, 7 * cell); ctx.fillStyle = '#111'; ctx.fillRect(fx * cell, fy * cell, 7 * cell, cell); ctx.fillRect(fx * cell, (fy + 6) * cell, 7 * cell, cell); ctx.fillRect(fx * cell, fy * cell, cell, 7 * cell); ctx.fillRect((fx + 6) * cell, fy * cell, cell, 7 * cell); ctx.fillRect((fx + 2) * cell, (fy + 2) * cell, 3 * cell, 3 * cell) }
+      finder(0, 0); finder(N - 7, 0); finder(0, N - 7)
+    },
+    download() {
+      var blob = new Blob(['China Digital Arrival Card\nConfirmation: ' + this.confirmationCode + '\n'], { type: 'text/plain' })
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'arrival-card-' + this.confirmationCode + '.txt'; a.click()
+    },
+  },
+})
+</script>
 </body>
 </html>
