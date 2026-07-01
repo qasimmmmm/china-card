@@ -2,6 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Emit a self-contained server bundle so the whole site can run in one
+  // container (Railway/Render/Fly/VPS) alongside the filing engine — the
+  // deployment that lets the live official-filing flow work end to end.
+  output: 'standalone',
   async headers() {
     return [
       {
