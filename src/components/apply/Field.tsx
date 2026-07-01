@@ -3,7 +3,7 @@
 import { useFormContext } from 'react-hook-form'
 import { Check, Upload, FileText, X } from 'lucide-react'
 import type { FieldDef } from '@/content/formSchema'
-import { COUNTRIES, CHINA_CITIES } from '@/content/formSchema'
+import { COUNTRIES, CHINA_CITIES, CHINA_PORTS, PHONE_AREA_CODES } from '@/content/formSchema'
 import { cn } from '@/lib/utils'
 
 const MAX_FILE_MB = 8
@@ -11,6 +11,8 @@ const MAX_FILE_MB = 8
 function optionsFor(field: FieldDef): string[] {
   if (field.type === 'country') return COUNTRIES
   if (field.id === 'entryCity' || field.id === 'destinationCity') return CHINA_CITIES
+  if (field.id === 'entryPort') return CHINA_PORTS
+  if (field.id === 'phoneAreaCode') return PHONE_AREA_CODES
   return field.options ?? []
 }
 

@@ -45,8 +45,16 @@ export function mapApplication(order) {
     { key: 'addressInChina', label: 'Address in China', value: a.addressInChina, type: 'text', hints: ['address in china', 'address', 'accommodation', 'hotel', '住址', '地址'] },
     { key: 'phone', label: 'Phone', value: a.phone, type: 'text', hints: ['contact number', 'phone', 'mobile', 'tel', '电话'] },
     { key: 'email', label: 'Email', value: a.email, type: 'text', hints: ['email', 'e-mail', '邮箱'] },
-    { key: 'inviterName', label: 'Inviting party', value: a.inviterName, type: 'text', hints: ['entity name', 'inviting', 'inviter', '邀请'] },
-    { key: 'departureDetails', label: 'Departure details', value: a.departureDetails, type: 'text', hints: ['departure flight', 'date of departure', 'departure', 'onward', '离境'] },
+    { key: 'inviterName', label: 'Inviting entity/person', value: a.inviterName, type: 'text', hints: ['entity name', 'inviting', 'inviter', '邀请'] },
+    { key: 'inviterContact', label: 'Inviting party contact', value: a.inviterContact, type: 'text', hints: ['entity contact', "inviter's contact", 'inviting party contact', '邀请单位联系'] },
+    { key: 'otherName', label: 'Other name', value: a.otherName, type: 'text', hints: ['other name', 'alias', '其他姓名'] },
+    { key: 'chineseName', label: 'Chinese name', value: a.chineseName, type: 'text', hints: ['chinese name', '中文姓名'] },
+    { key: 'cityOfBirth', label: 'City of birth', value: a.cityOfBirth, type: 'text', hints: ['city of birth', '出生城市'] },
+    { key: 'visaType', label: 'Visa type', value: a.visaType, type: 'select', hints: ['visa type', '签证种类'] },
+    { key: 'phoneAreaCode', label: 'Phone area code', value: a.phoneAreaCode, type: 'select', hints: ['area code', 'dialing code', 'phone area', '区号'] },
+    { key: 'departureDate', label: 'Date of departure', value: a.departureDate, type: 'date', hints: ['date of departure', '离境日期'] },
+    { key: 'departureTransportMode', label: 'Departure transport mode', value: a.departureTransportMode, type: 'select', hints: ['departure transportation', 'departure transport', '离境交通'] },
+    { key: 'departureCarrierNumber', label: 'Departure flight/train/vessel', value: a.departureCarrierNumber, type: 'text', hints: ['departure flight', 'departure vessel', 'departure train', '离境航班'] },
   ]
 
   // Official-mode operators can override selectors/hints/type per field without
