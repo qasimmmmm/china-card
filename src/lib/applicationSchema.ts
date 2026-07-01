@@ -31,8 +31,10 @@ function baseShape() {
   }
   shape.plan = z.enum(['standard', 'priority', 'express']).default('standard')
   shape.passportFileName = z.string().default('')
+  shape.signature = z.string().default('') // PNG data-URL of the customer's signature
   shape.agreeTruth = z.boolean().default(false)
   shape.agreeTerms = z.boolean().default(false)
+  shape.agreeAuthorize = z.boolean().default(false)
   return shape
 }
 
@@ -75,12 +77,18 @@ export const applicationSchema = z
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dob'], message: 'Date of birth cannot be in the future.' })
     }
 
-    // Final-step consents
+    // Final-step: signature + consents + authorization to submit on their behalf
+    if (typeof v.signature !== 'string' || !v.signature.startsWith('data:image')) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['signature'], message: 'Please sign — the official Arrival Card requires your signature.' })
+    }
     if (v.agreeTruth !== true) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['agreeTruth'], message: 'Please confirm your details are true and accurate.' })
     }
     if (v.agreeTerms !== true) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['agreeTerms'], message: 'Please accept the Terms and acknowledge this is an independent service.' })
+    }
+    if (v.agreeAuthorize !== true) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['agreeAuthorize'], message: 'Please authorize us to complete, sign, and submit your Arrival Card on your behalf.' })
     }
   })
 
@@ -88,7 +96,7 @@ export type ApplicationValues = z.infer<typeof applicationSchema>
 
 /** Default empty values for the form. */
 export function emptyApplication(plan: ApplicationValues['plan'] = 'standard'): Record<string, unknown> {
-  const out: Record<string, unknown> = { plan, passportFileName: '', agreeTruth: false, agreeTerms: false }
+  const out: Record<string, unknown> = { plan, passportFileName: '', signature: '', agreeTruth: false, agreeTerms: false, agreeAuthorize: false }
   for (const f of allFields) out[f.id] = f.type === 'checkboxes' ? [] : ''
   return out
 }

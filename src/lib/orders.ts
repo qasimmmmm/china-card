@@ -16,8 +16,9 @@ export function buildOrder(values: Record<string, unknown>): Order {
   const given = String(values.givenNames || '').trim()
   const name = [given, surname].filter(Boolean).join(' ') || 'Traveler'
 
-  // Strip consent booleans from the stored application payload (keep a record flag).
-  const { agreeTruth, agreeTerms, ...application } = values as Record<string, unknown>
+  // Strip consent booleans from the stored application payload (keep record flags).
+  // `signature` (PNG data-URL) stays in `application` — the worker reproduces it.
+  const { agreeTruth, agreeTerms, agreeAuthorize, ...application } = values as Record<string, unknown>
 
   return {
     reference: makeOrderReference(),
@@ -25,7 +26,12 @@ export function buildOrder(values: Record<string, unknown>): Order {
     amount: amountForPlan(plan),
     currency: 'USD',
     status: 'submitted',
-    application: { ...application, consentGiven: agreeTruth === true && agreeTerms === true },
+    application: {
+      ...application,
+      consentGiven: agreeTruth === true && agreeTerms === true,
+      authorizationGiven: agreeAuthorize === true,
+      authorizedAt: agreeAuthorize === true ? now : null,
+    },
     contact: {
       name,
       email: String(values.email || ''),

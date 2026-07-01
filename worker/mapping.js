@@ -57,6 +57,17 @@ export function mapApplication(order) {
     { key: 'departureCarrierNumber', label: 'Departure flight/train/vessel', value: a.departureCarrierNumber, type: 'text', hints: ['departure flight', 'departure vessel', 'departure train', '离境航班'] },
   ]
 
+  // Normalize to exactly what the customer confirmed on our Review step:
+  // UPPERCASE names/passport/carrier numbers; dialing code parsed from area code.
+  const UPPER = new Set(['surname', 'givenNames', 'otherName', 'passportNumber', 'carrierNumber', 'visaNumber', 'departureCarrierNumber'])
+  for (const f of fields) {
+    if (UPPER.has(f.key) && typeof f.value === 'string') f.value = f.value.toUpperCase()
+    if (f.key === 'phoneAreaCode' && typeof f.value === 'string') {
+      const m = f.value.match(/\+?\d+/)
+      if (m) f.value = m[0]
+    }
+  }
+
   // Official-mode operators can override selectors/hints/type per field without
   // editing code (worker/selectors.official.json). Precedence: explicit CSS
   // selector wins in fill.js; hints are the fallback.

@@ -99,6 +99,18 @@ export const ENTRY_BASIS = [
 
 export const YES_NO = ['Yes', 'No']
 
+/** NIA exempt categories — travelers matching these generally don't need the card. */
+export const EXEMPT_CATEGORIES = [
+  'I hold a PRC Foreign Permanent Resident ID Card',
+  'I hold a Mainland Travel Permit for HK/Macao residents (non-Chinese)',
+  'I am entering on a group visa / group visa-free tour',
+  'I am in direct transit under 24 hours and staying airside',
+  'I am on a round-trip on the same cruise ship',
+  'I use the e-channel / fast lane',
+  'I am crew of a cross-border transport vehicle',
+  'None of these apply to me',
+]
+
 export const SYMPTOMS = [
   'Fever',
   'Cough',
@@ -164,6 +176,7 @@ export const steps: StepDef[] = [
       { id: 'entryBasis', label: 'Basis for entry', type: 'select', required: true, options: ENTRY_BASIS, half: true },
       { id: 'visaType', label: 'Visa type', type: 'select', required: true, options: VISA_TYPES, showIf: { field: 'hasVisa', in: ['Yes'] }, half: true },
       { id: 'visaNumber', label: 'Visa / permit number', type: 'text', required: true, placeholder: 'As shown on your visa', showIf: { field: 'hasVisa', in: ['Yes'] }, half: true, max: 24 },
+      { id: 'exemptCheck', label: 'Do any of these apply to you?', type: 'checkboxes', required: false, options: EXEMPT_CATEGORIES, hint: 'These NIA categories usually don’t need an Arrival Card. Most travelers pick “None of these apply to me”.' },
     ],
   },
   {

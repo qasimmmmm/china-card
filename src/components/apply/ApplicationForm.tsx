@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Pencil,
+  Clock,
+  Info,
 } from 'lucide-react'
 import { steps, type PlanId } from '@/content/formSchema'
 import { pricing } from '@/content/marketing'
@@ -23,6 +25,7 @@ import { formatUSD, cn } from '@/lib/utils'
 import { Icon } from '@/components/ui/Icon'
 import { Field } from './Field'
 import { LiveFiling } from './LiveFiling'
+import { SignaturePad } from './SignaturePad'
 
 type Values = Record<string, unknown>
 const REVIEW = steps.length
@@ -111,7 +114,7 @@ export function ApplicationForm({ initialPlan = 'standard' }: { initialPlan?: Pl
   function onInvalid(errors: Record<string, unknown>) {
     const firstKey = Object.keys(errors)[0]
     if (!firstKey) return
-    if (firstKey === 'agreeTruth' || firstKey === 'agreeTerms') {
+    if (['agreeTruth', 'agreeTerms', 'agreeAuthorize', 'signature'].includes(firstKey)) {
       setStep(REVIEW)
       scrollTop()
       return
@@ -260,9 +263,14 @@ export function ApplicationForm({ initialPlan = 'standard' }: { initialPlan?: Pl
 }
 
 function StepCard({ step }: { step: number }) {
-  const { getValues } = useFormContextSafe()
+  const { getValues, watch } = useFormContextSafe()
   const s = steps[step]
   const visible = s.fields.filter((f) => isVisible(f, getValues()))
+
+  // Reactive exemption watch (visa step).
+  const exempt = (watch('exemptCheck') as string[]) || []
+  const flaggedExempt = exempt.filter((x) => x && x !== 'None of these apply to me')
+
   return (
     <div className="card p-6 sm:p-8">
       <div className="flex items-center gap-3">
@@ -275,6 +283,17 @@ function StepCard({ step }: { step: number }) {
         </div>
       </div>
 
+      {s.id === 'trip' && (
+        <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-brand-100 bg-brand-50/60 p-3.5 text-sm text-ink-soft">
+          <Clock className="mt-0.5 h-4.5 w-4.5 shrink-0 text-brand-600" aria-hidden="true" />
+          <span>
+            <strong className="text-navy">72-hour rule:</strong> the official system only issues the Arrival Card
+            within 72 hours of arrival. If your trip is further out, we hold your order and{' '}
+            <strong className="text-navy">submit the moment your window opens</strong>, then email your card.
+          </span>
+        </div>
+      )}
+
       <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
         {visible.map((f) => (
           <div key={f.id} className={cn(f.half ? 'sm:col-span-1' : 'sm:col-span-2')}>
@@ -282,6 +301,17 @@ function StepCard({ step }: { step: number }) {
           </div>
         ))}
       </div>
+
+      {s.id === 'visa' && flaggedExempt.length > 0 && (
+        <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-warn/30 bg-warn-light p-3.5 text-sm text-warn">
+          <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0" aria-hidden="true" />
+          <span>
+            <strong>You may not need an Arrival Card.</strong> Based on your answer, you could be in an NIA-exempt
+            category, in which case this service isn’t necessary. You can still continue if you’d like us to
+            review your case — but please double-check before paying.
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -297,13 +327,23 @@ function ReviewCard({
   onEdit: (i: number) => void
   onChangePlan: (p: PlanId) => void
 }) {
-  const { register } = useFormContextSafe()
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useFormContextSafe()
   const tier = pricing.find((p) => p.id === plan) ?? pricing[0]
+  const signature = (watch('signature') as string) || ''
 
+  // Fields the official portal stores/submits in UPPERCASE — show them that way
+  // so the customer confirms exactly what we submit.
+  const UPPER = new Set(['surname', 'givenNames', 'otherName', 'passportNumber', 'carrierNumber', 'visaNumber', 'departureCarrierNumber'])
   const fmt = (f: { id: string; label: string; type: string }) => {
     const v = values[f.id]
     if (Array.isArray(v)) return v.length ? v.join(', ') : '—'
-    return v ? String(v) : '—'
+    if (!v) return '—'
+    return UPPER.has(f.id) ? String(v).toUpperCase() : String(v)
   }
 
   return (
@@ -339,6 +379,10 @@ function ReviewCard({
             )
           })}
         </div>
+        <p className="mt-4 flex items-start gap-2 text-xs text-ink-muted">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          Names, passport and flight/vessel numbers are submitted in UPPERCASE exactly as shown above; dates as YYYY-MM-DD. This is exactly what we file on the official portal.
+        </p>
       </div>
 
       {/* Plan + consents */}
@@ -373,6 +417,16 @@ function ReviewCard({
           <span className="text-xl font-extrabold text-navy">{formatUSD(tier.price)}</span>
         </div>
 
+        {/* Signature — required by the official declaration step */}
+        <div className="mt-6">
+          <p className="field-label">Your signature *</p>
+          <p className="mb-2 text-xs text-ink-muted">
+            The official Arrival Card requires a signature. Sign below — we reproduce it on the official form.
+          </p>
+          <SignaturePad value={signature} onChange={(v) => setValue('signature', v, { shouldValidate: true, shouldDirty: true })} />
+          {errors.signature && <p className="field-error">{errors.signature.message as string}</p>}
+        </div>
+
         <div className="mt-5 space-y-3">
           <label className="flex cursor-pointer items-start gap-3 text-sm text-ink-soft">
             <input type="checkbox" className="mt-0.5 h-4.5 w-4.5 rounded border-line text-brand-600 focus:ring-brand-500" {...register('agreeTruth')} />
@@ -391,6 +445,13 @@ function ReviewCard({
                 Privacy Policy
               </Link>
               .
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-brand-100 bg-brand-50/50 p-3 text-sm text-ink-soft">
+            <input type="checkbox" className="mt-0.5 h-4.5 w-4.5 rounded border-line text-brand-600 focus:ring-brand-500" {...register('agreeAuthorize')} />
+            <span>
+              <strong className="text-navy">I authorize iVisa Portal</strong> to complete, sign, and submit my China
+              Arrival Card on my behalf using the information and signature I have provided.
             </span>
           </label>
         </div>
