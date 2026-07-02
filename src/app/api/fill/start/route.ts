@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     if (!ok) {
       return NextResponse.json({ available: true, error: (json.error as string) || 'Could not open the portal.' }, { status: 502 })
     }
-    await updateOrderStatus(order.reference, 'processing', 'Customer is completing the official CAPTCHA verification.')
+    await updateOrderStatus(order.reference, 'processing', 'Customer is reviewing the completed official form before final submission.')
     return NextResponse.json({ available: true, ...json })
   } catch {
     // Service unreachable → graceful fallback to assisted filing.
